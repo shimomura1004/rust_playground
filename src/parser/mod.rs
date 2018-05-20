@@ -85,15 +85,15 @@ impl<'a, T: 'a> Parser<Vec<T>> for Many1<'a, T> {
     }
 }
 
-pub struct Try<'a, T: 'a> {
-    pub ps : &'a Vec<&'a Parser<T>>,
+pub struct Try<T> {
+    pub ps : Vec<Box<Parser<T>>>,
 }
 
-impl<'a, T: 'a> Parser<T> for Try<'a, T> {
+impl<T> Parser<T> for Try<T> {
     fn parse<'b>(&self, input : &'b str) -> Result<(T, &'b str), ParseError> {
         let mut r = self.ps[0].parse(input);
         if !r.is_ok() {
-            for &p in self.ps {
+            for p in &self.ps {
                 r = p.parse(input);
                 if r.is_ok() {
                     break;
@@ -110,11 +110,11 @@ pub struct OneOf {
 
 impl Parser<char> for OneOf {
     fn parse<'b>(&self, input : &'b str) -> Result<(char, &'b str), ParseError> {
-        let mut ps = vec![];
+        let mut ps : Vec<Box<Parser<char>>> = vec![];
         for c in &self.cs {
-            // ps.push(Char{c: *c});
+            ps.push(Box::new(Char{c: *c}));
         }
-        Try{ps: &ps}.parse(input)
+        Try{ps}.parse(input)
 
         // let p0 : &Parser<char> = &Char{c: self.cs[0]};
         // let p1 = Char{c: self.cs[0]};
@@ -123,7 +123,7 @@ impl Parser<char> for OneOf {
     }
 }
 
-pub struct Digit {}
+// pub struct Digit {}
 
 // impl Parser<i32> for Digit {
 //     fn parse<'b>(&self, input : &'b str) -> Result<(T, &'b str), ParseError> {

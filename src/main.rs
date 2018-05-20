@@ -46,9 +46,22 @@ fn main() {
         Err(_) => (),
     }
 
+    // let code = "23";
+    // let p_2 = Char {c: '2'};
+    // let p_try = Try {ps: &vec![&p_1, &p_2]};
+    // let one_or_two = p_try.parse(code);
+    // println!("{:?}", one_or_two);
+
     let code = "23";
-    let p_2 = Char {c: '2'};
-    let p_try = Try {ps: &vec![&p_1, &p_2]};
-    let one_or_two = p_try.parse(code);
+    // let mut ps : Vec<Box<Parser<char>>> = vec![];
+    // ps.push(Box::new(Char{c: '1'}));
+    // ps.push(Box::new(Char{c: '2'}));
+    // let p_try = Try{ps: ps};
+    // let p_1 = Char {c: '1'};
+    // let p_2 = Char {c: '2'};
+    // let p_try = Try {ps: vec![Box::new(p_1), Box::new(p_2)]};
+    // let one_or_two = p_try.parse(code);
+    let p_one_or_two = OneOf{cs: vec!['1', '2']};
+    let one_or_two = p_one_or_two.parse(code);
     println!("{:?}", one_or_two);
 }
