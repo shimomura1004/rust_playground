@@ -1,132 +1,133 @@
-use std::fmt;
-use std::string;
+pub mod combinator;
+use parser::combinator::*;
+mod syntax;
 
-pub trait Parser<T> {
-    fn parse<'a>(&self, input : &'a str) -> Result<(T, &'a str), ParseError>;
-}
-
-pub struct ParseError {
-    pub filename: string::String,
-    pub line: u32,
-    pub char: u32,
-    pub explanation: string::String,
-}
-
-impl fmt::Debug for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}:{}:{} {}", self.filename, self.line, self.char, self.explanation)
+//---- TERM --------------------------------------------------------------------
+pub struct Num {}
+impl Parser<syntax::Term> for Num {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
+        let (num, input) = Digit{}.parse(input)?;
+        Ok((syntax::Term::Num(num), input))
     }
 }
 
-pub struct Char {
-    pub c : char,
+pub struct ParenedExpression {}
+impl Parser<syntax::Term> for ParenedExpression {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
+        let (exp, input) = Between {
+            left_p: &Char{c:'('},
+            mid_p: &Expression{},
+            right_p: &Char{c:')'},
+        }.parse(input)?;
+        Ok((syntax::Term::Paren(Box::new(exp)), input))
+    }    
 }
 
-impl Parser<char> for Char {
-    fn parse<'a>(&self, input : &'a str) -> Result<(char, &'a str), ParseError> {
-        match input.chars().next() {
-            Some(c) => {
-                if c == self.c {
-                    Ok((c, &input[1..]))
-                }
-                else {
-                    Err(ParseError {
-                        filename: "stdin".to_string(),
-                        line: 0,
-                        char: 0,
-                        explanation: format!("expected '{}' but got '{}'", self.c, c),
-                    })
-                }
-            }
-            None => Err(ParseError {
-                filename: "stdin".to_string(),
-                line: 0,
-                char: 0,
-                explanation: format!("expected '{}' but got EOF", self.c),
-            })
-        }
+pub struct Term {}
+impl Parser<syntax::Term> for Term {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
+        Try {
+            ps: vec![
+                Box::new(Num{}),
+                Box::new(ParenedExpression{}),
+            ]
+        }.parse(input)
     }
 }
 
-pub struct Many<'a, T: 'a> {
-    pub p : &'a Parser<T>,
-}
-
-impl<'a, T: 'a> Parser<Vec<T>> for Many<'a, T> {
-    fn parse<'b>(&self, input : &'b str) -> Result<(Vec<T>, &'b str), ParseError> {
-        let mut result = Vec::new();
-        let mut index = 0;
-        
-        loop {
-            match self.p.parse(&input[index..]) {
-                Ok((r, rest)) => {
-                    result.push(r);
-                    index = input.len() - rest.len();
-                },
-                Err(_) => break,
-            };
-        }
-
-        Ok((result, &input[index..]))
+pub struct AddExpression {}
+impl Parser<syntax::Exp1> for AddExpression {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp1, &'a str), ParseError> {
+        let (_, input) = Char{c: '+'}.parse(input)?;
+        let (term, input) = Term{}.parse(input)?;
+        let (exp1, input) = Expression1{}.parse(input)?;
+        Ok((syntax::Exp1::Add(Box::new(term), Box::new(exp1)), input))
     }
 }
 
-pub struct Many1<'a, T: 'a> {
-    pub p : &'a Parser<T>,
-}
-
-impl<'a, T: 'a> Parser<Vec<T>> for Many1<'a, T> {
-    fn parse<'b>(&self, input : &'b str) -> Result<(Vec<T>, &'b str), ParseError> {
-        let (r, input) = self.p.parse(input)?;
-        let many = Many {p: self.p};
-        let (mut rs, input) = many.parse(input)?;
-        rs.push(r);
-        Ok((rs, input))
+pub struct SubExpression {}
+impl Parser<syntax::Exp1> for SubExpression {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp1, &'a str), ParseError> {
+        let (_, input) = Char{c: '-'}.parse(input)?;
+        let (term, input) = Term{}.parse(input)?;
+        let (exp1, input) = Expression1{}.parse(input)?;
+        Ok((syntax::Exp1::Sub(Box::new(term), Box::new(exp1)), input))
     }
 }
 
-pub struct Try<T> {
-    pub ps : Vec<Box<Parser<T>>>,
-}
-
-impl<T> Parser<T> for Try<T> {
-    fn parse<'b>(&self, input : &'b str) -> Result<(T, &'b str), ParseError> {
-        let mut r = self.ps[0].parse(input);
-        if !r.is_ok() {
-            for p in &self.ps {
-                r = p.parse(input);
-                if r.is_ok() {
-                    break;
-                }
-            }
-        }
-        r
+pub struct EmptyExpression {}
+impl Parser<syntax::Exp1> for EmptyExpression {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp1, &'a str), ParseError> {
+        Ok((syntax::Exp1::Empty, input))
     }
 }
 
-pub struct OneOf {
-    pub cs: Vec<char>,
-}
-
-impl Parser<char> for OneOf {
-    fn parse<'b>(&self, input : &'b str) -> Result<(char, &'b str), ParseError> {
-        let mut ps : Vec<Box<Parser<char>>> = vec![];
-        for c in &self.cs {
-            ps.push(Box::new(Char{c: *c}));
-        }
-        Try{ps}.parse(input)
-
-        // let p0 : &Parser<char> = &Char{c: self.cs[0]};
-        // let p1 = Char{c: self.cs[0]};
-        // let ps = vec![p0, &p1];
-        // Try{ps: &ps}.parse(input)
+struct Expression1 {}
+impl Parser<syntax::Exp1> for Expression1 {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp1, &'a str), ParseError> {
+        Try{ps: vec![
+            Box::new(AddExpression{}),
+            Box::new(SubExpression{}),
+            Box::new(EmptyExpression{}),
+        ]}.parse(input)
     }
 }
 
-// pub struct Digit {}
+pub struct Expression {}
+impl Parser<syntax::Exp> for Expression {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp, &'a str), ParseError> {
+        let (term, input) = Term{}.parse(input)?;
+        let (exp1, input) = Expression1{}.parse(input)?;
+        Ok((syntax::Exp::Exp(Box::new(term), Box::new(exp1)), input))
+    }
+}
 
-// impl Parser<i32> for Digit {
-//     fn parse<'b>(&self, input : &'b str) -> Result<(T, &'b str), ParseError> {
-//         Many{p: }
+// //---- EXPRESSION --------------------------------------------------------------------
+// pub struct TermExpression {}
+// impl Parser<syntax::Expression> for TermExpression {
+//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Expression, &'a str), ParseError> {
+//         let (term, input) = Term{}.parse(input)?;
+//         Ok((syntax::Expression::Term(Box::new(term)), input))
+//     }
+// }
+
+// pub struct Plus {}
+// impl Parser<syntax::Expression> for Plus {
+//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Expression, &'a str), ParseError> {
+//         let (exp, input) = Expression{}.parse(input)?;
+//         let (_, input) = Char{c: '+'}.parse(input)?;
+//         let (term, input) = Term{}.parse(input)?;
+//         Ok((syntax::Expression::Add(Box::new(exp), Box::new(term)), input))
+//     }
+// }
+
+// pub struct Expression {}
+// impl Parser<syntax::Expression> for Expression {
+//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Expression, &'a str), ParseError> {
+//         Try {
+//             ps: vec![
+//                 Box::new(TermExpression{}),
+//                 Box::new(Plus{}),
+//             ]
+//         }.parse(input)
+//     }
+// }
+
+// //---- STATEMENT --------------------------------------------------------------------
+// pub struct ExpressionStatement {}
+// impl Parser<syntax::Statement> for ExpressionStatement {
+//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
+//         let (exp, input) = Expression{}.parse(input)?;
+//         Ok((syntax::Statement::Expression(Box::new(exp)), input))
+//     }   
+// }
+
+
+// pub struct Statement {}
+// impl Parser<syntax::Statement> for Statement {
+//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
+//         let (statement, input) = ExpressionStatement{}.parse(input)?;
+//         Eof{}.parse(input)?;
+//         Ok((statement, input))
 //     }
 // }

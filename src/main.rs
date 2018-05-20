@@ -1,7 +1,9 @@
+use std::io;
+use std::io::Write;
 mod vm;
 use vm::Operator::*;
 mod parser;
-use parser::*;
+use parser::combinator::*;
 
 fn main() {
     // calculate sum of 1..10
@@ -62,6 +64,22 @@ fn main() {
     // let p_try = Try {ps: vec![Box::new(p_1), Box::new(p_2)]};
     // let one_or_two = p_try.parse(code);
     let p_one_or_two = OneOf{cs: vec!['1', '2']};
+    let p_one_or_two = OneOf::new("12");
     let one_or_two = p_one_or_two.parse(code);
     println!("{:?}", one_or_two);
+
+    let code = "456a12";
+    let i = Digit{}.parse(code);
+    println!("{:?}", i);
+
+    loop {
+        let mut expression = String::new();
+
+        print!("> ");
+        io::stdout().flush();
+        io::stdin().read_line(&mut expression)
+            .expect("Failed to read line");
+
+        println!("{:?}", parser::Expression{}.parse(&expression.trim()));
+    }
 }
