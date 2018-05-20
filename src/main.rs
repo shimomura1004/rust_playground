@@ -1,7 +1,7 @@
 mod vm;
 use vm::Operator::*;
 mod parser;
-use parser::Parser;
+use parser::*;
 
 fn main() {
     // calculate sum of 1..10
@@ -27,12 +27,12 @@ fn main() {
     vm::process(&program);
 
     let code = "123";
-    let p_1 = parser::ParserChar {c : '1'};
+    let p_1 = Char {c : '1'};
     let result = p_1.parse(code);
     println!("{:?}", result);
 
     let code = "11123";
-    let p_ones = parser::ParserMany1 {p : &p_1};
+    let p_ones = Many1 {p : &p_1};
     let ones = p_ones.parse(code);
     println!("{:?}", ones);
     match ones {
@@ -47,8 +47,8 @@ fn main() {
     }
 
     let code = "23";
-    let p_2 = parser::ParserChar {c: '2'};
-    let p_try = parser::ParserTry {ps: vec![&p_1, &p_2]};
+    let p_2 = Char {c: '2'};
+    let p_try = Try {ps: &vec![&p_1, &p_2]};
     let one_or_two = p_try.parse(code);
     println!("{:?}", one_or_two);
 }

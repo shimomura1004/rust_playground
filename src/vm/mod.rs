@@ -30,7 +30,8 @@ enum Data {
 
 pub fn process(program : &Vec<Operator>) {
     let mut pc : usize = 0;
-    let mut sp : usize = 0;
+    //let mut sp : usize = 0;
+    let sp : usize = 0;
     let mut stack : Vec<Data> = Vec::new();
 
     while pc < program.len() {
