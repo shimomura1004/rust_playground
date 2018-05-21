@@ -6,6 +6,8 @@ pub enum Ast {
     Sub(Box<Ast>, Box<Ast>),
     Mul(Box<Ast>, Box<Ast>),
     Div(Box<Ast>, Box<Ast>),
+    App(Box<Ast>, Box<Ast>),
+    Var(String),
     Num(i32),
 }
 
@@ -13,6 +15,9 @@ fn term_to_ast(term : Term) -> Ast {
     match term {
         Term::Num(num) => Ast::Num(num),
         Term::Paren(exp) => exp_to_ast(*exp),
+        // todo
+        Term::Var(name) => Ast::Var(name),
+        Term::Function(vars, exp) => Ast::Num(0),
     }
 }
 
@@ -66,6 +71,9 @@ pub fn eval_ast(ast : &Ast) -> i32 {
         Ast::Sub(t1, t2) => eval_ast(&*t1) - eval_ast(&*t2),
         Ast::Mul(t1, t2) => eval_ast(&*t1) * eval_ast(&*t2),
         Ast::Div(t1, t2) => eval_ast(&*t1) / eval_ast(&*t2),
+        // todo
+        Ast::App(t1, t2) => 0,
+        Ast::Var(name) => 0,
         Ast::Num(num) => *num,
     }
 }

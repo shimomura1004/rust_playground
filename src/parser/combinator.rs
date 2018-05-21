@@ -168,6 +168,28 @@ impl Parser<()> for Eof {
     }
 }
 
+pub struct SepBy<'a, T1: 'a, T2: 'a> {
+    pub p: &'a Parser<T1>,
+    pub sep: &'a Parser<T2>,
+}
+impl<'a, T1, T2> Parser<Vec<T1>> for SepBy<'a, T1, T2> {
+    fn parse<'b>(&self, input : &'b str) -> Result<(Vec<T1>, &'b str), ParseError> {
+        let mut results = vec![];
+        let mut rest = &input[..];
+        loop {
+            let (result, input) = self.p.parse(rest)?;
+            rest = input;
+            results.push(result);
+
+            match self.sep.parse(rest) {
+                Ok((_, input)) => rest = input,
+                Err(_) => break,
+            }
+        }
+        Ok((results, rest))
+    }
+}
+
 pub struct True {}
 impl Parser<()> for True {
     fn parse<'b>(&self, input : &'b str) -> Result<((), &'b str), ParseError> {

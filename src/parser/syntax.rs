@@ -1,6 +1,8 @@
 #[derive(Debug)]
 pub enum Term {
     Num(i32),
+    Var(String),
+    Function(Vec<String>, Box<Exp>),
     Paren(Box<Exp>),
 }
 
@@ -28,9 +30,8 @@ pub enum Exp {
     Exp(Box<Exp2>, Box<Exp1>),
 }
 
-// #[derive(Debug)]
-// pub enum Statement {
-//     ExpressionStatement(Box<Exp>),
-//     Assignment(Box<Var>, Box<Exp>),
-
-// }
+#[derive(Debug)]
+pub enum Statement {
+    ExpressionStatement(Box<Exp>),
+    Assignment(String, Box<Exp>),
+}

@@ -11,6 +11,31 @@ impl Parser<syntax::Term> for Num {
     }
 }
 
+pub struct Var {}
+impl Parser<syntax::Term> for Var {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
+        let (var, input) = Many1{p: &OneOf::new("abcdefghijklmnopqrstuvwxyz")}.parse(input)?;
+        Ok((syntax::Term::Var(var.into_iter().collect()), input))
+    }
+}
+
+pub struct Fun {}
+impl Parser<syntax::Term> for Fun {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
+        let (names, input) = Between {
+            left_p: &Char{c: '|'},
+            right_p: &Char{c: '|'},
+            mid_p: &SepBy{
+                p: &Many1{p: &OneOf::new("abcdefghijklmnopqrstuvwxyz")},
+                sep: &Char{c: ','}
+            }
+        }.parse(input)?;
+        let (exp, input) = Expression{}.parse(input)?;
+        let names = names.iter().map(|v| v.into_iter().collect()).collect::<Vec<String>>();
+        Ok((syntax::Term::Function(names, Box::new(exp)), input))
+    }
+}
+
 pub struct ParenedExpression {}
 impl Parser<syntax::Term> for ParenedExpression {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
@@ -29,6 +54,8 @@ impl Parser<syntax::Term> for Term {
         Try {
             ps: vec![
                 Box::new(Num{}),
+                Box::new(Var{}),
+                Box::new(Fun{}),
                 Box::new(ParenedExpression{}),
             ]
         }.parse(input)
