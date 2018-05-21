@@ -35,3 +35,11 @@ pub fn exp_to_ast(exp : Exp) -> Ast {
     let term_ast = term_to_ast(*term);
     exp1_to_ast(*exp1, term_ast)
 }
+
+pub fn eval_ast(ast : Ast) -> i32 {
+    match ast {
+        Ast::Add(t1, t2) => eval_ast(*t1) + eval_ast(*t2),
+        Ast::Sub(t1, t2) => eval_ast(*t1) - eval_ast(*t2),
+        Ast::Num(num) => num,
+    }
+}

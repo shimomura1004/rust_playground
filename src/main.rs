@@ -86,8 +86,11 @@ fn main() {
 
         match parse_result {
             Ok((exp, _)) => {
-                let v = interpreter::exp_to_ast(exp);
-                println!("{:?}", v);
+                let ast = interpreter::exp_to_ast(exp);
+                println!("AST {:?}", ast);
+
+                let v = interpreter::eval_ast(ast);
+                println!("Val: {}", v);
             },
             Err(e) => println!("AST: {:?}", e),
         }
