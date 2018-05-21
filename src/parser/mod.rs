@@ -155,20 +155,33 @@ impl Parser<syntax::Exp> for Expression {
     }
 }
 
-// //---- Statement --------------------------------------------------------------------
-// pub struct ExpressionStatement {}
-// impl Parser<syntax::Statement> for ExpressionStatement {
-//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
-//         let (exp, input) = Expression{}.parse(input)?;
-//         Ok((syntax::Statement::Expression(Box::new(exp)), input))
-//     }   
-// }
+//---- Statement --------------------------------------------------------------------
+pub struct ExpressionStatement {}
+impl Parser<syntax::Statement> for ExpressionStatement {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
+        let (exp, input) = Expression{}.parse(input)?;
+        Ok((syntax::Statement::ExpressionStatement(Box::new(exp)), input))
+    }   
+}
 
-// pub struct Statement {}
-// impl Parser<syntax::Statement> for Statement {
-//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
-//         let (statement, input) = ExpressionStatement{}.parse(input)?;
-//         Eof{}.parse(input)?;
-//         Ok((statement, input))
-//     }
-// }
+pub struct AssignmentStatement {}
+impl Parser<syntax::Statement> for AssignmentStatement {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
+        let (var, input) = Many1{p: &OneOf::new("abcdefghijklmnopqrstuvwxyz")}.parse(input)?;
+        let (_, input) = Char{c: '='}.parse(input)?;
+        let (exp, input) = Expression{}.parse(input)?;
+        Ok((syntax::Statement::AssignmentStatement(var.iter().collect(), Box::new(exp)), input))
+    }    
+}
+
+pub struct Statement {}
+impl Parser<syntax::Statement> for Statement {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
+        let (statement, input) = Try {ps: vec![
+            Box::new(AssignmentStatement{}),
+            Box::new(ExpressionStatement{}),
+        ]}.parse(input)?;
+        let (_, input) = Eof{}.parse(input)?;
+        Ok((statement, input))
+    }
+}

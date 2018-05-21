@@ -33,5 +33,5 @@ pub enum Exp {
 #[derive(Debug)]
 pub enum Statement {
     ExpressionStatement(Box<Exp>),
-    Assignment(String, Box<Exp>),
+    AssignmentStatement(String, Box<Exp>),
 }

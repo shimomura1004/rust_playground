@@ -85,6 +85,9 @@ fn main() {
         let parse_result = parser::Expression{}.parse(&expression.trim());
         println!("ParseResult: {:?}", parse_result);
 
+        let hoge = parser::Statement{}.parse(&expression.trim());
+        println!("Statement: {:?}", hoge);
+
         match parse_result {
             Ok((exp, _)) => {
                 let ast = interpreter::exp_to_ast(exp);
@@ -98,7 +101,7 @@ fn main() {
                 code.push(vm::Operator::Print);
                 println!("{:?}", code);
 
-                vm::process(&code);
+                // vm::process(&code);
             },
             Err(e) => println!("AST: {:?}", e),
         }
