@@ -1,6 +1,6 @@
 pub mod combinator;
 use parser::combinator::*;
-mod syntax;
+pub mod syntax;
 
 //---- TERM --------------------------------------------------------------------
 pub struct Num {}

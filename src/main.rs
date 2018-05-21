@@ -4,6 +4,7 @@ mod vm;
 use vm::Operator::*;
 mod parser;
 use parser::combinator::*;
+mod interpreter;
 
 fn main() {
     // calculate sum of 1..10
@@ -80,6 +81,16 @@ fn main() {
         io::stdin().read_line(&mut expression)
             .expect("Failed to read line");
 
-        println!("{:?}", parser::Expression{}.parse(&expression.trim()));
+        let parse_result = parser::Expression{}.parse(&expression.trim());
+        println!("ParseResult: {:?}", parse_result);
+
+        match parse_result {
+            Ok((exp, _)) => {
+                let v = interpreter::exp_to_ast(exp);
+                println!("{:?}", v);
+            },
+            Err(e) => println!("AST: {:?}", e),
+        }
+        
     }
 }
