@@ -5,13 +5,25 @@ pub enum Term {
 }
 
 #[derive(Debug)]
+pub enum Exp3 {
+    Mul(Box<Term>, Box<Exp3>),
+    Div(Box<Term>, Box<Exp3>),
+    Empty,
+}
+
+#[derive(Debug)]
+pub enum Exp2 {
+    Exp2(Box<Term>, Box<Exp3>),
+}
+
+#[derive(Debug)]
 pub enum Exp1 {
-    Add(Box<Term>, Box<Exp1>),
-    Sub(Box<Term>, Box<Exp1>),
+    Add(Box<Exp2>, Box<Exp1>),
+    Sub(Box<Exp2>, Box<Exp1>),
     Empty,
 }
 
 #[derive(Debug)]
 pub enum Exp {
-    Exp(Box<Term>, Box<Exp1>),
+    Exp(Box<Exp2>, Box<Exp1>),
 }
