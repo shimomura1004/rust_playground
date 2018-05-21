@@ -45,6 +45,13 @@ pub fn process(program : &Vec<Operator>) {
                 stack.push(Data::Num(v2 + v1));
             },
 
+            Operator::Sub => {
+                let Data::Num(v1) = stack.pop().unwrap();
+                let Data::Num(v2) = stack.pop().unwrap();
+                stack.push(Data::Num(v2 - v1));
+            },
+
+
             Operator::Not => {
                 let Data::Num(n) = stack.pop().unwrap();
                 if n == 0 {

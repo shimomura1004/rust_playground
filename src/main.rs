@@ -5,6 +5,7 @@ use vm::Operator::*;
 mod parser;
 use parser::combinator::*;
 mod interpreter;
+mod compiler;
 
 fn main() {
     // calculate sum of 1..10
@@ -89,11 +90,17 @@ fn main() {
                 let ast = interpreter::exp_to_ast(exp);
                 println!("AST {:?}", ast);
 
-                let v = interpreter::eval_ast(ast);
+                let v = interpreter::eval_ast(&ast);
                 println!("Val: {}", v);
+
+                let mut code = vec![];
+                compiler::compile(&ast, &mut code);
+                code.push(vm::Operator::Print);
+                println!("{:?}", code);
+
+                vm::process(&code);
             },
             Err(e) => println!("AST: {:?}", e),
         }
-        
     }
 }

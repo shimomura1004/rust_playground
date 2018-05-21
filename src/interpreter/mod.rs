@@ -60,12 +60,12 @@ pub fn exp_to_ast(exp : Exp) -> Ast {
     exp1_to_ast(*exp1, exp2_ast)
 }
 
-pub fn eval_ast(ast : Ast) -> i32 {
+pub fn eval_ast(ast : &Ast) -> i32 {
     match ast {
-        Ast::Add(t1, t2) => eval_ast(*t1) + eval_ast(*t2),
-        Ast::Sub(t1, t2) => eval_ast(*t1) - eval_ast(*t2),
-        Ast::Mul(t1, t2) => eval_ast(*t1) * eval_ast(*t2),
-        Ast::Div(t1, t2) => eval_ast(*t1) / eval_ast(*t2),
-        Ast::Num(num) => num,
+        Ast::Add(t1, t2) => eval_ast(&*t1) + eval_ast(&*t2),
+        Ast::Sub(t1, t2) => eval_ast(&*t1) - eval_ast(&*t2),
+        Ast::Mul(t1, t2) => eval_ast(&*t1) * eval_ast(&*t2),
+        Ast::Div(t1, t2) => eval_ast(&*t1) / eval_ast(&*t2),
+        Ast::Num(num) => *num,
     }
 }

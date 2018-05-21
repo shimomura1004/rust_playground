@@ -27,3 +27,10 @@ pub enum Exp1 {
 pub enum Exp {
     Exp(Box<Exp2>, Box<Exp1>),
 }
+
+// #[derive(Debug)]
+// pub enum Statement {
+//     ExpressionStatement(Box<Exp>),
+//     Assignment(Box<Var>, Box<Exp>),
+
+// }

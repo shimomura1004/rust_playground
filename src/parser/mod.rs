@@ -2,7 +2,7 @@ pub mod combinator;
 use parser::combinator::*;
 pub mod syntax;
 
-//---- TERM --------------------------------------------------------------------
+//---- Expression --------------------------------------------------------------------
 pub struct Num {}
 impl Parser<syntax::Term> for Num {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
@@ -128,38 +128,7 @@ impl Parser<syntax::Exp> for Expression {
     }
 }
 
-// //---- EXPRESSION --------------------------------------------------------------------
-// pub struct TermExpression {}
-// impl Parser<syntax::Expression> for TermExpression {
-//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Expression, &'a str), ParseError> {
-//         let (term, input) = Term{}.parse(input)?;
-//         Ok((syntax::Expression::Term(Box::new(term)), input))
-//     }
-// }
-
-// pub struct Plus {}
-// impl Parser<syntax::Expression> for Plus {
-//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Expression, &'a str), ParseError> {
-//         let (exp, input) = Expression{}.parse(input)?;
-//         let (_, input) = Char{c: '+'}.parse(input)?;
-//         let (term, input) = Term{}.parse(input)?;
-//         Ok((syntax::Expression::Add(Box::new(exp), Box::new(term)), input))
-//     }
-// }
-
-// pub struct Expression {}
-// impl Parser<syntax::Expression> for Expression {
-//     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Expression, &'a str), ParseError> {
-//         Try {
-//             ps: vec![
-//                 Box::new(TermExpression{}),
-//                 Box::new(Plus{}),
-//             ]
-//         }.parse(input)
-//     }
-// }
-
-// //---- STATEMENT --------------------------------------------------------------------
+// //---- Statement --------------------------------------------------------------------
 // pub struct ExpressionStatement {}
 // impl Parser<syntax::Statement> for ExpressionStatement {
 //     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
@@ -167,7 +136,6 @@ impl Parser<syntax::Exp> for Expression {
 //         Ok((syntax::Statement::Expression(Box::new(exp)), input))
 //     }   
 // }
-
 
 // pub struct Statement {}
 // impl Parser<syntax::Statement> for Statement {
