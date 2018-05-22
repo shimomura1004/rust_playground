@@ -7,7 +7,8 @@ use parser::combinator::*;
 mod interpreter;
 mod compiler;
 
-fn main() {
+#[test]
+fn vm_test() {
     // calculate sum of 1..10
     let program = vec![
         PushInt32(10),  // max
@@ -29,50 +30,60 @@ fn main() {
         Print,
     ];
     vm::process(&program);
+}
 
+#[test]
+fn char_parser() {
     let code = "123";
-    let p_1 = Char {c : '1'};
-    let result = p_1.parse(code);
-    println!("{:?}", result);
+    let p_one = Char {c : '1'};
+    let result = p_one.parse(code);
+    assert!(result.is_ok(), "parse error");
+    let (c, _) = result.unwrap();
+    assert_eq!(c, '1');
+}
 
+#[test]
+fn many1_parser() {
     let code = "11123";
-    let p_ones = Many1 {p : &p_1};
+    let p_one = Char {c : '1'};
+    let p_ones = Many1 {p : &p_one};
     let ones = p_ones.parse(code);
-    println!("{:?}", ones);
-    match ones {
-        Ok((_, code)) => {
-            let ones = p_ones.parse(code);
-            println!("{:?}", ones);
+    assert!(ones.is_ok(), "parse error");
+    let (ones, _) = ones.unwrap();
+    assert_eq!(ones, vec!['1','1','1']);
+}
 
-            let one = p_1.parse(code);
-            println!("{:?}", one);
-        },
-        Err(_) => (),
-    }
-
-    // let code = "23";
-    // let p_2 = Char {c: '2'};
-    // let p_try = Try {ps: &vec![&p_1, &p_2]};
-    // let one_or_two = p_try.parse(code);
-    // println!("{:?}", one_or_two);
-
+#[test]
+fn try_parser() {
     let code = "23";
-    // let mut ps : Vec<Box<Parser<char>>> = vec![];
-    // ps.push(Box::new(Char{c: '1'}));
-    // ps.push(Box::new(Char{c: '2'}));
-    // let p_try = Try{ps: ps};
-    // let p_1 = Char {c: '1'};
-    // let p_2 = Char {c: '2'};
-    // let p_try = Try {ps: vec![Box::new(p_1), Box::new(p_2)]};
-    // let one_or_two = p_try.parse(code);
-    let p_one_or_two = OneOf{cs: vec!['1', '2']};
+    let p_try = Try {ps: vec![Box::new(Char {c: '1'}), Box::new(Char {c: '2'})]};
+    let one_or_two = p_try.parse(code);
+    assert!(one_or_two.is_ok(), "parse error");
+    let (one_or_two, _) = one_or_two.unwrap();
+    assert_eq!(one_or_two, '2');
+}
+
+#[test]
+fn oneof_parser() {
+    let code = "23";
     let p_one_or_two = OneOf::new("12");
     let one_or_two = p_one_or_two.parse(code);
-    println!("{:?}", one_or_two);
+    assert!(one_or_two.is_ok(), "parse error");
+    let (one_or_two, _) = one_or_two.unwrap();
+    assert_eq!(one_or_two, '2');
+}
 
+#[test]
+fn digit_parser() {
     let code = "456a12";
     let i = Digit{}.parse(code);
-    println!("{:?}", i);
+    assert!(i.is_ok(), "parse error");
+    let (i, _) = i.unwrap();
+    assert_eq!(i, 456);
+}
+
+fn main() {
+    let mut env = std::collections::HashMap::new();
 
     loop {
         let mut expression = String::new();
@@ -82,24 +93,21 @@ fn main() {
         io::stdin().read_line(&mut expression)
             .expect("Failed to read line");
 
-        let parse_result = parser::Expression{}.parse(&expression.trim());
-        println!("ParseResult: {:?}", parse_result);
-
-        let hoge = parser::Statement{}.parse(&expression.trim());
-        println!("Statement: {:?}", hoge);
+        let parse_result = parser::Statement{}.parse(&expression.trim());
+        // println!("ParseResult: {:?}", parse_result);
 
         match parse_result {
-            Ok((exp, _)) => {
-                let ast = interpreter::exp_to_ast(exp);
-                println!("AST {:?}", ast);
+            Ok((statement, _)) => {
+                let ast = interpreter::statement_to_ast(statement);
+                // println!("AST {:?}", ast);
 
-                let v = interpreter::eval_ast(&ast);
-                println!("Val: {}", v);
+                let v = interpreter::eval_ast(&ast, &mut env);
+                println!("Val: {:?}", v);
 
-                let mut code = vec![];
-                compiler::compile(&ast, &mut code);
-                code.push(vm::Operator::Print);
-                println!("{:?}", code);
+                // let mut code = vec![];
+                // compiler::compile(&ast, &mut code);
+                // code.push(vm::Operator::Print);
+                // println!("{:?}", code);
 
                 // vm::process(&code);
             },

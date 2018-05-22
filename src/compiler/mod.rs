@@ -28,5 +28,9 @@ pub fn compile(ast : &Ast, code : &mut Vec<vm::Operator>) {
         },
         Ast::Var(name) => (),
         Ast::Num(num) => code.push(vm::Operator::PushInt32(*num)),
+
+        Ast::Assign(name, ast) => {
+            
+        }
     };
 }
