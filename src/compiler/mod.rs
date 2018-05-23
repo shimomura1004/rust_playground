@@ -1,4 +1,4 @@
-use interpreter::Ast;
+use parser::syntax::Ast;
 use vm;
 
 pub fn compile(ast : &Ast, code : &mut Vec<vm::Operator>) {
@@ -30,7 +30,7 @@ pub fn compile(ast : &Ast, code : &mut Vec<vm::Operator>) {
         Ast::Num(num) => code.push(vm::Operator::PushInt32(*num)),
 
         Ast::Assign(name, ast) => {
-            
+
         }
     };
 }

@@ -98,7 +98,7 @@ fn main() {
 
         match parse_result {
             Ok((statement, _)) => {
-                let ast = interpreter::statement_to_ast(statement);
+                let ast = parser::syntax::statement_to_ast(statement);
                 // println!("AST {:?}", ast);
 
                 let v = interpreter::eval_ast(&ast, &mut env);
