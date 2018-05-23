@@ -14,7 +14,7 @@ impl Parser<syntax::Term> for Num {
 pub struct Var {}
 impl Parser<syntax::Term> for Var {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
-        let (var, input) = Many1{p: &OneOf::new("abcdefghijklmnopqrstuvwxyz")}.parse(input)?;
+        let (var, input) = Many1{p: &Lower{}}.parse(input)?;
         Ok((syntax::Term::Var(var.into_iter().collect()), input))
     }
 }
@@ -26,7 +26,7 @@ impl Parser<syntax::Term> for Fun {
             left_p: &Char{c: '|'},
             right_p: &Char{c: '|'},
             mid_p: &SepBy{
-                p: &Many1{p: &OneOf::new("abcdefghijklmnopqrstuvwxyz")},
+                p: &Many1{p: &Lower{}},
                 sep: &Char{c: ','}
             }
         }.parse(input)?;
@@ -167,7 +167,7 @@ impl Parser<syntax::Statement> for ExpressionStatement {
 pub struct AssignmentStatement {}
 impl Parser<syntax::Statement> for AssignmentStatement {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
-        let (var, input) = Many1{p: &OneOf::new("abcdefghijklmnopqrstuvwxyz")}.parse(input)?;
+        let (var, input) = Many1{p: &Lower{}}.parse(input)?;
         let (_, input) = Char{c: '='}.parse(input)?;
         let (exp, input) = Expression{}.parse(input)?;
         Ok((syntax::Statement::AssignmentStatement(var.iter().collect(), Box::new(exp)), input))

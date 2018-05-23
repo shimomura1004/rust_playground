@@ -136,6 +136,27 @@ impl Parser<i32> for Digit {
     }
 }
 
+pub struct Lower {}
+impl Parser<char> for Lower {
+    fn parse<'b>(&self, input : &'b str) -> Result<(char, &'b str), ParseError> {
+        OneOf::new("abcdefghijklmnopqrstuvwxyz").parse(input)
+    }
+}
+
+pub struct Upper {}
+impl Parser<char> for Upper {
+    fn parse<'b>(&self, input : &'b str) -> Result<(char, &'b str), ParseError> {
+        OneOf::new("ABCDEFGHIJKLMNOPQRSTUVWXYZ").parse(input)
+    }
+}
+
+pub struct Letter {}
+impl Parser<char> for Letter {
+    fn parse<'b>(&self, input : &'b str) -> Result<(char, &'b str), ParseError> {
+        Try{ps: vec![Box::new(Upper{}), Box::new(Lower{})]}.parse(input)
+    }
+}
+
 pub struct Between<'a, T1: 'a, T2: 'a, T3: 'a> {
     pub left_p: &'a Parser<T1>,
     pub mid_p: &'a Parser<T2>,

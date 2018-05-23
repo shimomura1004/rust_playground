@@ -22,7 +22,7 @@ pub fn eval_ast(ast : &Ast, env: &mut HashMap<String, Box<Ast>>) -> Option<i32> 
         Ast::Assign(name, ast) => {
             let v = eval_ast(ast, env)?;
             env.insert(name.to_string(), Box::new(Ast::Num(v)));
-            None
+            Some(v)
         },
     }
 }
