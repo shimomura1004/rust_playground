@@ -6,6 +6,7 @@ pub mod syntax;
 pub struct Num {}
 impl Parser<syntax::Term> for Num {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (num, input) = Digit{}.parse(input)?;
         Ok((syntax::Term::Num(num), input))
     }
@@ -14,6 +15,7 @@ impl Parser<syntax::Term> for Num {
 pub struct Var {}
 impl Parser<syntax::Term> for Var {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (var, input) = Many1{p: &Lower{}}.parse(input)?;
         Ok((syntax::Term::Var(var.into_iter().collect()), input))
     }
@@ -40,9 +42,9 @@ pub struct ParenedExpression {}
 impl Parser<syntax::Term> for ParenedExpression {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Term, &'a str), ParseError> {
         let (exp, input) = Between {
-            left_p: &Char{c:'('},
-            mid_p: &Expression{},
-            right_p: &Char{c:')'},
+            left_p: &Then::new(&Spaces{}, &Char{c:'('}),
+            mid_p: &Then::new(&Spaces{}, &Expression{}),
+            right_p: &Then::new(&Spaces{}, &Char{c:')'}),
         }.parse(input)?;
         Ok((syntax::Term::Paren(Box::new(exp)), input))
     }    
@@ -62,23 +64,68 @@ impl Parser<syntax::Term> for Term {
     }
 }
 
+pub struct AppExpression {}
+impl Parser<syntax::Exp5> for AppExpression {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp5, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
+        let (term, input) = Term{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
+        let (exp5, input) = Expression5{}.parse(input)?;
+        Ok((syntax::Exp5::App(Box::new(term), Box::new(exp5)), input))
+    }
+}
+
+pub struct EmptyExpression5 {}
+impl Parser<syntax::Exp5> for EmptyExpression5 {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp5, &'a str), ParseError> {
+        Ok((syntax::Exp5::Empty, input))
+    }
+}
+
+struct Expression5 {}
+impl Parser<syntax::Exp5> for Expression5 {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp5, &'a str), ParseError> {
+        Try{ps: vec![
+            Box::new(AppExpression{}),
+            Box::new(EmptyExpression5{}),
+        ]}.parse(input)
+    }
+}
+
+pub struct Expression4 {}
+impl Parser<syntax::Exp4> for Expression4 {
+    fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp4, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
+        let (term, input) = Term{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
+        let (exp5, input) = Expression5{}.parse(input)?;
+        Ok((syntax::Exp4::Exp4(Box::new(term), Box::new(exp5)), input))
+    }
+}
+
 pub struct MulExpression {}
 impl Parser<syntax::Exp3> for MulExpression {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp3, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (_, input) = Char{c: '*'}.parse(input)?;
-        let (term, input) = Term{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
+        let (exp4, input) = Expression4{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
         let (exp3, input) = Expression3{}.parse(input)?;
-        Ok((syntax::Exp3::Mul(Box::new(term), Box::new(exp3)), input))
+        Ok((syntax::Exp3::Mul(Box::new(exp4), Box::new(exp3)), input))
     }
 }
 
 pub struct DivExpression {}
 impl Parser<syntax::Exp3> for DivExpression {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp3, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (_, input) = Char{c: '/'}.parse(input)?;
-        let (term, input) = Term{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
+        let (exp4, input) = Expression4{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
         let (exp3, input) = Expression3{}.parse(input)?;
-        Ok((syntax::Exp3::Div(Box::new(term), Box::new(exp3)), input))
+        Ok((syntax::Exp3::Div(Box::new(exp4), Box::new(exp3)), input))
     }
 }
 
@@ -99,18 +146,22 @@ impl Parser<syntax::Exp3> for Expression3 {
         ]}.parse(input)
     }
 }
+
 pub struct Expression2 {}
 impl Parser<syntax::Exp2> for Expression2 {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp2, &'a str), ParseError> {
-        let (term, input) = Term{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
+        let (exp4, input) = Expression4{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
         let (exp3, input) = Expression3{}.parse(input)?;
-        Ok((syntax::Exp2::Exp2(Box::new(term), Box::new(exp3)), input))
+        Ok((syntax::Exp2::Exp2(Box::new(exp4), Box::new(exp3)), input))
     }
 }
 
 pub struct AddExpression {}
 impl Parser<syntax::Exp1> for AddExpression {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp1, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (_, input) = Char{c: '+'}.parse(input)?;
         let (exp2, input) = Expression2{}.parse(input)?;
         let (exp1, input) = Expression1{}.parse(input)?;
@@ -121,6 +172,7 @@ impl Parser<syntax::Exp1> for AddExpression {
 pub struct SubExpression {}
 impl Parser<syntax::Exp1> for SubExpression {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp1, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (_, input) = Char{c: '-'}.parse(input)?;
         let (exp2, input) = Expression2{}.parse(input)?;
         let (exp1, input) = Expression1{}.parse(input)?;
@@ -149,7 +201,9 @@ impl Parser<syntax::Exp1> for Expression1 {
 pub struct Expression {}
 impl Parser<syntax::Exp> for Expression {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Exp, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (exp2, input) = Expression2{}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
         let (exp1, input) = Expression1{}.parse(input)?;
         Ok((syntax::Exp::Exp(Box::new(exp2), Box::new(exp1)), input))
     }
@@ -159,6 +213,7 @@ impl Parser<syntax::Exp> for Expression {
 pub struct ExpressionStatement {}
 impl Parser<syntax::Statement> for ExpressionStatement {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (exp, input) = Expression{}.parse(input)?;
         Ok((syntax::Statement::ExpressionStatement(Box::new(exp)), input))
     }   
@@ -167,8 +222,11 @@ impl Parser<syntax::Statement> for ExpressionStatement {
 pub struct AssignmentStatement {}
 impl Parser<syntax::Statement> for AssignmentStatement {
     fn parse<'a>(&self, input : &'a str) -> Result<(syntax::Statement, &'a str), ParseError> {
+        let (_, input) = Spaces{}.parse(input)?;
         let (var, input) = Many1{p: &Lower{}}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
         let (_, input) = Char{c: '='}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
         let (exp, input) = Expression{}.parse(input)?;
         Ok((syntax::Statement::AssignmentStatement(var.iter().collect(), Box::new(exp)), input))
     }    
@@ -181,6 +239,7 @@ impl Parser<syntax::Statement> for Statement {
             Box::new(AssignmentStatement{}),
             Box::new(ExpressionStatement{}),
         ]}.parse(input)?;
+        let (_, input) = Spaces{}.parse(input)?;
         let (_, input) = Eof{}.parse(input)?;
         Ok((statement, input))
     }

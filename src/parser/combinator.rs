@@ -1,6 +1,7 @@
 use std::fmt;
 use std::string;
 
+// todo: implement Parser with function? Fn<T> (&str) -> Result((T, &str), ParseError)
 pub trait Parser<T> {
     fn parse<'a>(&self, input : &'a str) -> Result<(T, &'a str), ParseError>;
 }
@@ -51,7 +52,6 @@ impl Parser<char> for Char {
 pub struct Many<'a, T: 'a> {
     pub p : &'a Parser<T>,
 }
-
 impl<'a, T: 'a> Parser<Vec<T>> for Many<'a, T> {
     fn parse<'b>(&self, input : &'b str) -> Result<(Vec<T>, &'b str), ParseError> {
         let mut result = Vec::new();
@@ -71,10 +71,19 @@ impl<'a, T: 'a> Parser<Vec<T>> for Many<'a, T> {
     }
 }
 
+pub struct SkipMany<'a, T: 'a> {
+    pub p : &'a Parser<T>,
+}
+impl<'a, T: 'a> Parser<()> for SkipMany<'a, T> {
+    fn parse<'b>(&self, input : &'b str) -> Result<((), &'b str), ParseError> {
+        let (_, input) = Many{p: self.p}.parse(input)?;
+        Ok(((), input))
+    }
+}
+
 pub struct Many1<'a, T: 'a> {
     pub p : &'a Parser<T>,
 }
-
 impl<'a, T: 'a> Parser<Vec<T>> for Many1<'a, T> {
     fn parse<'b>(&self, input : &'b str) -> Result<(Vec<T>, &'b str), ParseError> {
         let (r, input) = self.p.parse(input)?;
@@ -89,7 +98,6 @@ impl<'a, T: 'a> Parser<Vec<T>> for Many1<'a, T> {
 pub struct Try<T> {
     pub ps : Vec<Box<Parser<T>>>,
 }
-
 impl<T> Parser<T> for Try<T> {
     fn parse<'b>(&self, input : &'b str) -> Result<(T, &'b str), ParseError> {
         let mut r = self.ps[0].parse(input);
@@ -105,16 +113,30 @@ impl<T> Parser<T> for Try<T> {
     }
 }
 
+pub struct Then<'a, T1: 'a, T2: 'a> {
+    pub p1 : &'a Parser<T1>,
+    pub p2 : &'a Parser<T2>,
+}
+impl<'a, T1, T2> Then<'a, T1, T2> {
+    pub fn new(p1: &'a Parser<T1>, p2: &'a Parser<T2>) -> Then<'a, T1, T2> {
+        Then {p1, p2}
+    }
+}
+impl<'a, T1, T2> Parser<T2> for Then<'a, T1, T2> {
+    fn parse<'b>(&self, input : &'b str) -> Result<(T2, &'b str), ParseError> {
+        let (_, input) = self.p1.parse(input)?;
+        self.p2.parse(input)
+    }
+}
+
 pub struct OneOf {
     pub cs: Vec<char>,
 }
-
 impl OneOf {
     pub fn new(chars: &str) -> OneOf {
         OneOf {cs: chars.chars().collect::<Vec<char>>()}
     }
 }
-
 impl Parser<char> for OneOf {
     fn parse<'b>(&self, input : &'b str) -> Result<(char, &'b str), ParseError> {
         let mut ps : Vec<Box<Parser<char>>> = vec![];
@@ -126,7 +148,6 @@ impl Parser<char> for OneOf {
 }
 
 pub struct Digit {}
-
 impl Parser<i32> for Digit {
     fn parse<'b>(&self, input : &'b str) -> Result<(i32, &'b str), ParseError> {
         let (digit_str, input) = Many1{p: &OneOf::new("0123456789")}.parse(input)?;
@@ -157,12 +178,25 @@ impl Parser<char> for Letter {
     }
 }
 
+pub struct Space {}
+impl Parser<char> for Space {
+    fn parse<'b>(&self, input : &'b str) -> Result<(char, &'b str), ParseError> {
+        OneOf::new(" \t\n\r").parse(input)
+    }
+}
+
+pub struct Spaces {}
+impl Parser<()> for Spaces {
+    fn parse<'b>(&self, input : &'b str) -> Result<((), &'b str), ParseError> {
+        SkipMany{p: &Space{}}.parse(input)
+    }
+}
+
 pub struct Between<'a, T1: 'a, T2: 'a, T3: 'a> {
     pub left_p: &'a Parser<T1>,
     pub mid_p: &'a Parser<T2>,
     pub right_p: &'a Parser<T3>,
 }
-
 impl<'a, T1, T2, T3> Parser<T2> for Between<'a, T1, T2, T3> {
     fn parse<'b>(&self, input : &'b str) -> Result<(T2, &'b str), ParseError> {
         let (_, input) = self.left_p.parse(input)?;

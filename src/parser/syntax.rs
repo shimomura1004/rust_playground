@@ -7,15 +7,26 @@ pub enum Term {
 }
 
 #[derive(Debug)]
+pub enum Exp5 {
+    App(Box<Term>, Box<Exp5>),
+    Empty,
+}
+
+#[derive(Debug)]
+pub enum Exp4 {
+    Exp4(Box<Term>, Box<Exp5>),
+}
+
+#[derive(Debug)]
 pub enum Exp3 {
-    Mul(Box<Term>, Box<Exp3>),
-    Div(Box<Term>, Box<Exp3>),
+    Mul(Box<Exp4>, Box<Exp3>),
+    Div(Box<Exp4>, Box<Exp3>),
     Empty,
 }
 
 #[derive(Debug)]
 pub enum Exp2 {
-    Exp2(Box<Term>, Box<Exp3>),
+    Exp2(Box<Exp4>, Box<Exp3>),
 }
 
 #[derive(Debug)]
@@ -59,15 +70,32 @@ fn term_to_ast(term : Term) -> Ast {
     }
 }
 
+fn exp5_to_ast(exp5 : Exp5, ast : Ast) -> Ast {
+    match exp5 {
+        Exp5::App(term, exp5) => {
+            let term_ast = term_to_ast(*term);
+            let ast = Ast::App(Box::new(ast), Box::new(term_ast));
+            exp5_to_ast(*exp5, ast)
+        },
+        Exp5::Empty => ast,
+    }
+}
+
+fn exp4_to_ast(exp4 : Exp4) -> Ast {
+    let Exp4::Exp4(term, exp5) = exp4;
+    let term_ast = term_to_ast(*term);
+    exp5_to_ast(*exp5, term_ast)
+}
+
 fn exp3_to_ast(exp3 : Exp3, ast : Ast) -> Ast {
     match exp3 {
-        Exp3::Mul(term, exp3) => {
-            let term_ast = term_to_ast(*term);
+        Exp3::Mul(exp4, exp3) => {
+            let term_ast = exp4_to_ast(*exp4);
             let ast = Ast::Mul(Box::new(ast), Box::new(term_ast));
             exp3_to_ast(*exp3, ast)
         },
-        Exp3::Div(term, exp3) => {
-            let term_ast = term_to_ast(*term);
+        Exp3::Div(exp4, exp3) => {
+            let term_ast = exp4_to_ast(*exp4);
             let ast = Ast::Div(Box::new(ast), Box::new(term_ast));
             exp3_to_ast(*exp3, ast)
         },
@@ -76,8 +104,8 @@ fn exp3_to_ast(exp3 : Exp3, ast : Ast) -> Ast {
 }
 
 fn exp2_to_ast(exp2 : Exp2) -> Ast {
-    let Exp2::Exp2(term, exp3) = exp2;
-    let term_ast = term_to_ast(*term);
+    let Exp2::Exp2(exp4, exp3) = exp2;
+    let term_ast = exp4_to_ast(*exp4);
     exp3_to_ast(*exp3, term_ast)
 }
 
