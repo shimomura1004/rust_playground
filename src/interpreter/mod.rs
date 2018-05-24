@@ -8,7 +8,7 @@ pub enum Data {
     Fun(Fun),
 }
 
-pub fn eval_ast(ast : &Ast, env: &mut HashMap<String, &Data>) -> Option<Data> {
+pub fn eval_ast(ast : &Ast, env: &mut HashMap<&str, Data>) -> Option<Data> {
     match ast {
         Ast::Add(t1, t2) => {
             match (eval_ast(&*t1, env)?, eval_ast(&*t2, env)?) {
@@ -44,7 +44,7 @@ pub fn eval_ast(ast : &Ast, env: &mut HashMap<String, &Data>) -> Option<Data> {
             }
         },
         Ast::Var(name) => {
-            let v = env.get(name)?;
+            // let v = env.get(name)?;
             // Some(**v)
             None
         },

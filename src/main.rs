@@ -7,6 +7,70 @@ use parser::combinator::*;
 mod interpreter;
 mod compiler;
 
+type Fun = Box<fn(Hoge) -> Hoge>;
+enum Hoge<'a> {
+    Int(i32),
+    Fun(&'a Fun),
+}
+
+fn test<'a>(k : &'a str, v : &'a Hoge, aaa : &mut std::collections::HashMap<&'a str, &'a Hoge<'a>>) {
+    let t : &'a Fun = &Box::new(|x| x);
+    aaa.insert("ten", &Hoge::Int(10));
+    aaa.insert("fun", &Hoge::Fun(t));
+    aaa.insert(k, v);
+    aaa.get("ten");
+}
+
+fn main() {
+    let mut aaa = std::collections::HashMap::new();
+    test("five", &Hoge::Int(5), &mut aaa);
+    match aaa.get("fun") {
+        Some(hoge) => {
+            match hoge {
+                Hoge::Int(i) => println!("{}", i),
+                Hoge::Fun(f) => println!("function"),
+            }
+        },
+        None => println!("Not found"),
+    }
+
+    let mut env = std::collections::HashMap::new();
+
+    loop {
+        let mut expression = String::new();
+
+        print!("> ");
+        io::stdout().flush();
+        io::stdin().read_line(&mut expression)
+            .expect("Failed to read line");
+
+        let parse_result = parser::Statement{}.parse(&expression.trim());
+        // println!("ParseResult: {:?}", parse_result);
+
+        match parse_result {
+            Ok((statement, _)) => {
+                let ast = parser::syntax::statement_to_ast(statement);
+                // println!("AST {:?}", ast);
+
+                let v = interpreter::eval_ast(&ast, &mut env);
+                match v {
+                    Some(interpreter::Data::Num(num)) => println!("{}", num),
+                    Some(interpreter::Data::Fun(_)) => println!("<fun>"),
+                    None => println!("error"),
+                };
+
+                // let mut code = vec![];
+                // compiler::compile(&ast, &mut code);
+                // code.push(vm::Operator::Print);
+                // println!("{:?}", code);
+
+                // vm::process(&code);
+            },
+            Err(e) => println!("AST: {:?}", e),
+        }
+    }
+}
+
 #[test]
 fn vm_test() {
     // calculate sum of 1..10
@@ -80,42 +144,4 @@ fn digit_parser() {
     assert!(i.is_ok(), "parse error");
     let (i, _) = i.unwrap();
     assert_eq!(i, 456);
-}
-
-fn main() {
-    let mut env = std::collections::HashMap::new();
-
-    loop {
-        let mut expression = String::new();
-
-        print!("> ");
-        io::stdout().flush();
-        io::stdin().read_line(&mut expression)
-            .expect("Failed to read line");
-
-        let parse_result = parser::Statement{}.parse(&expression.trim());
-        // println!("ParseResult: {:?}", parse_result);
-
-        match parse_result {
-            Ok((statement, _)) => {
-                let ast = parser::syntax::statement_to_ast(statement);
-                // println!("AST {:?}", ast);
-
-                let v = interpreter::eval_ast(&ast, &mut env);
-                match v {
-                    Some(interpreter::Data::Num(num)) => println!("{}", num),
-                    Some(interpreter::Data::Fun(_)) => println!("<fun>"),
-                    None => println!("error"),
-                };
-
-                // let mut code = vec![];
-                // compiler::compile(&ast, &mut code);
-                // code.push(vm::Operator::Print);
-                // println!("{:?}", code);
-
-                // vm::process(&code);
-            },
-            Err(e) => println!("AST: {:?}", e),
-        }
-    }
 }
