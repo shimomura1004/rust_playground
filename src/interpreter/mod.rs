@@ -1,27 +1,58 @@
 use std::collections::HashMap;
 use parser::syntax::*;
 
-pub fn eval_ast(ast : &Ast, env: &mut HashMap<String, Box<Ast>>) -> Option<i32> {
+type Fun = fn(Data) -> Data;
+
+pub enum Data {
+    Num(i32),
+    Fun(Fun),
+}
+
+pub fn eval_ast(ast : &Ast, env: &mut HashMap<String, &Data>) -> Option<Data> {
     match ast {
-        Ast::Add(t1, t2) => Some(eval_ast(&*t1, env)? + eval_ast(&*t2, env)?),
-        Ast::Sub(t1, t2) => Some(eval_ast(&*t1, env)? - eval_ast(&*t2, env)?),
-        Ast::Mul(t1, t2) => Some(eval_ast(&*t1, env)? * eval_ast(&*t2, env)?),
-        Ast::Div(t1, t2) => Some(eval_ast(&*t1, env)? / eval_ast(&*t2, env)?),
-        // todo
-        Ast::App(t1, t2) => Some(0),
-        Ast::Var(name) => {
-            let num = env.get(name)?;
-            match **num {
-                Ast::Num(num) => Some(num),
-                // todo
+        Ast::Add(t1, t2) => {
+            match (eval_ast(&*t1, env)?, eval_ast(&*t2, env)?) {
+                (Data::Num(n1), Data::Num(n2)) => Some(Data::Num(n1 + n2)),
                 _ => None,
             }
         },
-        Ast::Num(num) => Some(*num),
+        Ast::Sub(t1, t2) => {
+            match (eval_ast(&*t1, env)?, eval_ast(&*t2, env)?) {
+                (Data::Num(n1), Data::Num(n2)) => Some(Data::Num(n1 - n2)),
+                _ => None,
+            }
+        },
+        Ast::Mul(t1, t2) => {
+            match (eval_ast(&*t1, env)?, eval_ast(&*t2, env)?) {
+                (Data::Num(n1), Data::Num(n2)) => Some(Data::Num(n1 * n2)),
+                _ => None,
+            }
+        },
+        Ast::Div(t1, t2) => {
+            match (eval_ast(&*t1, env)?, eval_ast(&*t2, env)?) {
+                (Data::Num(n1), Data::Num(n2)) => Some(Data::Num(n1 / n2)),
+                _ => None,
+            }
+        },
+        Ast::App(t1, t2) => {
+            match eval_ast(&*t1, env)? {
+                Data::Fun(fun) => {
+                    let val = eval_ast(&*t2, env)?;
+                    Some(fun(val))
+                }
+                _ => None
+            }
+        },
+        Ast::Var(name) => {
+            let v = env.get(name)?;
+            // Some(**v)
+            None
+        },
+        Ast::Num(num) => Some(Data::Num(*num)),
 
         Ast::Assign(name, ast) => {
             let v = eval_ast(ast, env)?;
-            env.insert(name.to_string(), Box::new(Ast::Num(v)));
+            //env.insert(name.to_string(), &v);
             Some(v)
         },
     }

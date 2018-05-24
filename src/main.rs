@@ -102,7 +102,11 @@ fn main() {
                 // println!("AST {:?}", ast);
 
                 let v = interpreter::eval_ast(&ast, &mut env);
-                println!("Val: {:?}", v);
+                match v {
+                    Some(interpreter::Data::Num(num)) => println!("{}", num),
+                    Some(interpreter::Data::Fun(_)) => println!("<fun>"),
+                    None => println!("error"),
+                };
 
                 // let mut code = vec![];
                 // compiler::compile(&ast, &mut code);
