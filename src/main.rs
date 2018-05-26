@@ -1,30 +1,45 @@
 use std::io;
 use std::io::Write;
+use std::collections::HashMap;
 mod vm;
-use vm::Operator::*;
 mod parser;
 use parser::combinator::*;
 mod interpreter;
 mod compiler;
 
-type Fun = Box<fn(Hoge) -> Hoge>;
-enum Hoge<'a> {
+type Fun = Box<Fn(i32) -> i32>;
+enum Hoge {
     Int(i32),
-    Fun(&'a Fun),
+    Fun(Fun),
 }
 
-fn test<'a>(k : &'a str, v : &'a Hoge, aaa : &mut std::collections::HashMap<&'a str, &'a Hoge<'a>>) {
-    let t : &'a Fun = &Box::new(|x| x);
+fn test<'a, 'b>(k : &'a str, v : &'a Hoge, aaa : &'b mut HashMap<&'a str, &'a Hoge>) {
+    let t = &Box::new(|x:i32| x);
     aaa.insert("ten", &Hoge::Int(10));
-    aaa.insert("fun", &Hoge::Fun(t));
+    // aaa.insert("fun", &Hoge::Fun(t));
     aaa.insert(k, v);
     aaa.get("ten");
 }
 
 fn main() {
-    let mut aaa = std::collections::HashMap::new();
-    test("five", &Hoge::Int(5), &mut aaa);
-    match aaa.get("fun") {
+    let mut aaa = HashMap::new();
+    {
+        let aaa2 = &mut aaa;
+        aaa2.insert("six", &Hoge::Int(6));
+    }
+    {
+        let aaa3 = &mut aaa;
+        aaa3.get(&"six");
+    }
+    {
+        let aaa4 = &mut aaa;
+        test("five", &Hoge::Int(5), aaa4);
+    }
+
+    {
+        let aaa5 = &mut aaa;
+
+    match aaa5.get("fun") {
         Some(hoge) => {
             match hoge {
                 Hoge::Int(i) => println!("{}", i),
@@ -33,31 +48,36 @@ fn main() {
         },
         None => println!("Not found"),
     }
+    }
 
-    let mut env = std::collections::HashMap::new();
+    let mut env = HashMap::new();
+    let mut expression = String::new();
 
-    loop {
-        let mut expression = String::new();
-
+    //loop {
+    {
         print!("> ");
         io::stdout().flush();
         io::stdin().read_line(&mut expression)
             .expect("Failed to read line");
 
-        let parse_result = parser::Statement{}.parse(&expression.trim());
-        // println!("ParseResult: {:?}", parse_result);
+        let parse_result = parser::Statement{}.parse(expression.trim());
 
         match parse_result {
             Ok((statement, _)) => {
                 let ast = parser::syntax::statement_to_ast(statement);
-                // println!("AST {:?}", ast);
 
-                let v = interpreter::eval_ast(&ast, &mut env);
-                match v {
-                    Some(interpreter::Data::Num(num)) => println!("{}", num),
-                    Some(interpreter::Data::Fun(_)) => println!("<fun>"),
-                    None => println!("error"),
-                };
+                let v = interpreter::eval_statement_ast(&ast, &mut env);
+                // match v {
+                //     Some((interpreter::Data::Num(num), env_)) => {
+                //         println!("{}", num);
+                //         // env = env_;
+                //     },
+                //     Some((interpreter::Data::Fun(_), env_)) => {
+                //         println!("<fun>");
+                //         // env = env_;
+                //     },
+                //     None => println!("error"),
+                // };
 
                 // let mut code = vec![];
                 // compiler::compile(&ast, &mut code);
