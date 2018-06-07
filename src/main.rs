@@ -4,90 +4,63 @@ use std::collections::HashMap;
 mod vm;
 mod parser;
 use parser::combinator::*;
-mod interpreter;
-mod compiler;
-
-type Fun = Box<Fn(i32) -> i32>;
-enum Hoge {
-    Int(i32),
-    Fun(Fun),
-}
-
-fn test<'a, 'b>(k : &'a str, v : &'a Hoge, aaa : &'b mut HashMap<&'a str, &'a Hoge>) {
-    let t = &Box::new(|x:i32| x);
-    aaa.insert("ten", &Hoge::Int(10));
-    // aaa.insert("fun", &Hoge::Fun(t));
-    aaa.insert(k, v);
-    aaa.get("ten");
-}
+// mod interpreter;
+// mod compiler;
 
 fn main() {
-    let mut aaa = HashMap::new();
-    {
-        let aaa2 = &mut aaa;
-        aaa2.insert("six", &Hoge::Int(6));
-    }
-    {
-        let aaa3 = &mut aaa;
-        aaa3.get(&"six");
-    }
-    {
-        let aaa4 = &mut aaa;
-        test("five", &Hoge::Int(5), aaa4);
-    }
-
-    {
-        let aaa5 = &mut aaa;
-
-    match aaa5.get("fun") {
-        Some(hoge) => {
-            match hoge {
-                Hoge::Int(i) => println!("{}", i),
-                Hoge::Fun(f) => println!("function"),
-            }
-        },
-        None => println!("Not found"),
-    }
-    }
-
-    let mut env = HashMap::new();
+    // let mut env = HashMap::new();
     let mut expression = String::new();
 
-    //loop {
-    {
+    loop {
         print!("> ");
         io::stdout().flush();
         io::stdin().read_line(&mut expression)
             .expect("Failed to read line");
 
-        let parse_result = parser::Statement{}.parse(expression.trim());
+        let mut input = expression.trim().to_string();
+        println!("buf: {}", input);
 
-        match parse_result {
-            Ok((statement, _)) => {
-                let ast = parser::syntax::statement_to_ast(statement);
+        let whitespaces = SkipMany{p: &Char{c: ' '}};
+        let many_a = Many{p: &Char{c: 'a'}};
+        let many_b = Many1{p: &Char{c: 'b'}};
+        let many_c = Many1{p: &Char{c: 'c'}};
+        let b_or_c = Try{ps: vec![&many_b, &many_c]};
+        
+        whitespaces.parse(&mut input);
+        let parse_result = many_a.parse(&mut input);
+        println!("{:?} {}", parse_result, input);
+        let parse_result = b_or_c.parse(&mut input);
+        println!("{:?} {}", parse_result, input);
+        expression.clear();
 
-                let v = interpreter::eval_statement_ast(&ast, &mut env);
-                // match v {
-                //     Some((interpreter::Data::Num(num), env_)) => {
-                //         println!("{}", num);
-                //         // env = env_;
-                //     },
-                //     Some((interpreter::Data::Fun(_), env_)) => {
-                //         println!("<fun>");
-                //         // env = env_;
-                //     },
-                //     None => println!("error"),
-                // };
+        // let parse_result = parser::Statement{}.parse(expression.trim().to_string());
 
-                // let mut code = vec![];
-                // compiler::compile(&ast, &mut code);
-                // code.push(vm::Operator::Print);
-                // println!("{:?}", code);
+        // match parse_result {
+        //     Ok((statement, _)) => {
+        //         let ast = parser::syntax::statement_to_ast(statement);
 
-                // vm::process(&code);
-            },
-            Err(e) => println!("AST: {:?}", e),
-        }
+        //         let v = interpreter::eval_statement_ast(&ast, &mut env);
+        //         // match v {
+        //         //     Some((interpreter::Data::Num(num), env_)) => {
+        //         //         println!("{}", num);
+        //         //         // env = env_;
+        //         //     },
+        //         //     Some((interpreter::Data::Fun(_), env_)) => {
+        //         //         println!("<fun>");
+        //         //         // env = env_;
+        //         //     },
+        //         //     None => println!("error"),
+        //         // };
+
+        //         // let mut code = vec![];
+        //         // compiler::compile(&ast, &mut code);
+        //         // code.push(vm::Operator::Print);
+        //         // println!("{:?}", code);
+
+        //         // vm::process(&code);
+        //     },
+        //     Err(e) => println!("AST: {:?}", e),
+        // }
     }
 }
 
