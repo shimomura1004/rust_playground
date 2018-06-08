@@ -44,7 +44,7 @@ pub fn eval_exp_ast(ast : &ExpAst, env: &HashMap<String, Data>) -> Option<Data> 
         },
         ExpAst::Var(name) => {
             let v = env.get(name)?;
-            Some(*v)
+            Some(v)
         },
         ExpAst::Num(num) => Some(Data::Num(*num)),
     }
@@ -55,7 +55,7 @@ pub fn eval_statement_ast(ast : &StatementAst, env: &mut HashMap<String, Data>) 
         StatementAst::Exp(exp_ast) => eval_exp_ast(exp_ast, env),
         StatementAst::Assign(name, exp_ast) => {
             let val = eval_exp_ast(exp_ast, env)?;
-            env.insert(*name, val);
+            env.insert(name.to_string(), val);
             None
         },
     }
