@@ -26,16 +26,16 @@ fn main() {
                 let ast = parser::syntax::statement_to_ast(statement);
 
                 //let v = interpreter::eval_statement_ast(ast, &mut interpreter);
-                let v = interpreter.eval(&ast);
+                let v = interpreter.eval(ast);
                 match v {
                     Some(v) => {
                         match v {
                             interpreter::Data::Num(num) => {
                                 println!("{}", num);
                             },
-                            interpreter::Data::Fun(_) => {
-                                println!("<fun>");
-                            },
+                            // interpreter::Data::Fun(_) => {
+                            //     println!("<fun>");
+                            // },
                         }
                     },
                     None => println!("error"),
