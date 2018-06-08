@@ -33,9 +33,9 @@ fn main() {
                             interpreter::Data::Num(num) => {
                                 println!("{}", num);
                             },
-                            // interpreter::Data::Fun(_) => {
-                            //     println!("<fun>");
-                            // },
+                            interpreter::Data::Fun(_, _) => {
+                                println!("<fun>");
+                            },
                         }
                     },
                     None => println!("error"),

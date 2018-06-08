@@ -40,19 +40,15 @@ impl Fun {
 }
 impl Parser<syntax::Term> for Fun {
     fn parse(&self, input : &mut String) -> Result<syntax::Term, ParseError> {
-        let names = Between::new(
+        let name = Between::new(
             Char::new('|'),
-            SepBy::new(Many1::new(Lower::new()), Char::new(',')),
+            Many1::new(Lower::new()),
             Char::new('|')
         ).parse(input)?;
         let exp = Expression::new().parse(input)?;
+        let name = name.into_iter().collect::<String>();
 
-        let mut names2 : Vec<String> = vec![];
-        for name in names {
-            let name = name.into_iter().collect::<String>();
-            names2.push(name)
-        }
-        Ok(syntax::Term::Function(names2, Box::new(exp)))
+        Ok(syntax::Term::Function(name, Box::new(exp)))
     }
 }
 

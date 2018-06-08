@@ -2,7 +2,7 @@
 pub enum Term {
     Num(i32),
     Var(String),
-    Function(Vec<String>, Box<Exp>),
+    Function(String, Box<Exp>),
     Paren(Box<Exp>),
 }
 
@@ -47,7 +47,7 @@ pub enum Statement {
     AssignmentStatement(String, Box<Exp>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExpAst {
     Add(Box<ExpAst>, Box<ExpAst>),
     Sub(Box<ExpAst>, Box<ExpAst>),
@@ -56,6 +56,7 @@ pub enum ExpAst {
     App(Box<ExpAst>, Box<ExpAst>),
     Var(String),
     Num(i32),
+    Fun(String, Box<ExpAst>),
 }
 
 pub enum StatementAst {
@@ -67,9 +68,8 @@ fn term_to_ast(term : Term) -> ExpAst {
     match term {
         Term::Num(num) => ExpAst::Num(num),
         Term::Paren(exp) => exp_to_ast(*exp),
-        // todo
         Term::Var(name) => ExpAst::Var(name),
-        Term::Function(vars, exp) => ExpAst::Num(0),
+        Term::Function(var, exp) => ExpAst::Fun(var, Box::new(exp_to_ast(*exp))),
     }
 }
 
