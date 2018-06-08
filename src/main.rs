@@ -8,12 +8,14 @@ mod interpreter;
 // mod compiler;
 
 fn main() {
-    let mut env = HashMap::new();
+    //let mut env = HashMap::new();
+    let mut interpreter = interpreter::Interpreter::new();
     let mut expression = String::new();
 
     loop {
         print!("> ");
         io::stdout().flush();
+        expression.clear();
         io::stdin().read_line(&mut expression)
             .expect("Failed to read line");
 
@@ -23,18 +25,21 @@ fn main() {
             Ok(statement) => {
                 let ast = parser::syntax::statement_to_ast(statement);
 
-                let v = interpreter::eval_statement_ast(&ast, &mut env);
-                // match v {
-                //     Some((interpreter::Data::Num(num), env_)) => {
-                //         println!("{}", num);
-                //         // env = env_;
-                //     },
-                //     Some((interpreter::Data::Fun(_), env_)) => {
-                //         println!("<fun>");
-                //         // env = env_;
-                //     },
-                //     None => println!("error"),
-                // };
+                //let v = interpreter::eval_statement_ast(ast, &mut interpreter);
+                let v = interpreter.eval(&ast);
+                match v {
+                    Some(v) => {
+                        match v {
+                            interpreter::Data::Num(num) => {
+                                println!("{}", num);
+                            },
+                            interpreter::Data::Fun(_) => {
+                                println!("<fun>");
+                            },
+                        }
+                    },
+                    None => println!("error"),
+                };
 
                 // let mut code = vec![];
                 // compiler::compile(&ast, &mut code);
