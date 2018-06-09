@@ -24,8 +24,6 @@ fn main() {
         match parse_result {
             Ok(statement) => {
                 let ast = parser::syntax::statement_to_ast(statement);
-
-                //let v = interpreter::eval_statement_ast(ast, &mut interpreter);
                 let v = interpreter.eval(ast);
                 match v {
                     Some(v) => {
@@ -118,6 +116,18 @@ fn combination_parser() {
     let parse_result = many_a.parse(&mut input);
     assert!(parse_result.is_ok(), "parse error");
     let parse_result = b_or_c.parse(&mut input);
+    assert!(parse_result.is_ok(), "parse error");
+}
+
+#[test]
+fn str_parser() {
+    let mut code = "helloworld".to_string();
+    let hello_p = Str::new("hello");
+    let world_p = Str::new("world");
+
+    let parse_result = hello_p.parse(&mut code);
+    assert!(parse_result.is_ok(), "parse error");
+    let parse_result = world_p.parse(&mut code);
     assert!(parse_result.is_ok(), "parse error");
 }
 

@@ -64,7 +64,23 @@ impl Interpreter {
             },
             ExpAst::Fun(vars, exp) => Some(Data::Fun(vars, *exp)),
             ExpAst::Num(num) => Some(Data::Num(num)),
-            _ => None,
+            ExpAst::If(cond_ast, then_ast, else_ast) => {
+                match self.eval_exp_ast(*cond_ast, bind)? {
+                    Data::Num(num) => {
+                        if num != 0 {
+                            Some(self.eval_exp_ast(*then_ast, bind)?)
+                        }
+                        else {
+                            Some(self.eval_exp_ast(*else_ast, bind)?)
+                        }
+                    },
+                    _ => None,
+                }
+            },
+            _ => {
+                println!("??? {:?}", ast);
+                None
+            },
         }
     }
 

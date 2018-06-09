@@ -22,13 +22,35 @@ impl Var {
     pub fn new() -> Box<Parser<syntax::Term>> {
         Box::new(Var{})
     }
+
+    fn is_reserved_name(name : &str) -> bool {
+        let reserved = vec![
+            "if",
+            "then",
+            "else",
+            "end"
+        ];
+
+        reserved.iter().any(|x| *x == name)
+    }
 }
 impl Parser<syntax::Term> for Var {
     fn parse(&self, input : &mut String) -> Result<syntax::Term, ParseError> {
         Spaces::new().parse(input)?;
         let var = Many1::new(Lower::new()).parse(input)?;
         let name = var.into_iter().collect::<String>();
-        Ok(syntax::Term::Var(name))
+
+        if !Var::is_reserved_name(&name) {
+            Ok(syntax::Term::Var(name))
+        }
+        else {
+            Err (ParseError {
+                filename: "".to_string(),
+                line: 0,
+                char: 0,
+                explanation: "".to_string(),
+            })
+        }
     }
 }
 
@@ -69,6 +91,33 @@ impl Parser<syntax::Term> for ParenedExpression {
     }    
 }
 
+pub struct IfExpression {}
+impl IfExpression {
+    pub fn new () -> Box<Parser<syntax::Term>> {
+        Box::new(IfExpression{})
+    }
+}
+impl Parser<syntax::Term> for IfExpression {
+    fn parse(&self, input : &mut String) -> Result<syntax::Term, ParseError> {
+        Spaces::new().parse(input)?;
+        Str::new("if").parse(input)?;
+        Spaces::new().parse(input)?;
+        let cond_exp = Expression::new().parse(input)?;
+        Spaces::new().parse(input)?;
+        Str::new("then").parse(input)?;
+        Spaces::new().parse(input)?;
+        let then_exp = Expression::new().parse(input)?;
+        Spaces::new().parse(input)?;
+        Str::new("else").parse(input)?;
+        Spaces::new().parse(input)?;
+        let else_exp = Expression::new().parse(input)?;
+        Spaces::new().parse(input)?;
+        Str::new("end").parse(input)?;
+
+        Ok(syntax::Term::If(Box::new(cond_exp), Box::new(then_exp), Box::new(else_exp)))
+    }
+}
+
 pub struct Term {}
 impl Term {
     pub fn new() -> Box<Parser<syntax::Term>> {
@@ -78,10 +127,11 @@ impl Term {
 impl Parser<syntax::Term> for Term {
     fn parse(&self, input : &mut String) -> Result<syntax::Term, ParseError> {
         Try::new(vec![
-            Num::new(),
-            Var::new(),
+            IfExpression::new(),
             Fun::new(),
             ParenedExpression::new(),
+            Num::new(),
+            Var::new(),
         ]).parse(input)
     }
 }

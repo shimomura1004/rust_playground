@@ -4,6 +4,7 @@ pub enum Term {
     Var(String),
     Function(String, Box<Exp>),
     Paren(Box<Exp>),
+    If(Box<Exp>, Box<Exp>, Box<Exp>),
 }
 
 #[derive(Debug)]
@@ -57,6 +58,7 @@ pub enum ExpAst {
     Var(String),
     Num(i32),
     Fun(String, Box<ExpAst>),
+    If(Box<ExpAst>, Box<ExpAst>, Box<ExpAst>),
 }
 
 pub enum StatementAst {
@@ -70,6 +72,12 @@ fn term_to_ast(term : Term) -> ExpAst {
         Term::Paren(exp) => exp_to_ast(*exp),
         Term::Var(name) => ExpAst::Var(name),
         Term::Function(var, exp) => ExpAst::Fun(var, Box::new(exp_to_ast(*exp))),
+        Term::If(cond, then_exp, else_exp) => {
+            let cond_ast = exp_to_ast(*cond);
+            let then_exp_ast = exp_to_ast(*then_exp);
+            let else_exp_ast = exp_to_ast(*else_exp);
+            ExpAst::If(Box::new(cond_ast), Box::new(then_exp_ast), Box::new(else_exp_ast))
+        },
     }
 }
 

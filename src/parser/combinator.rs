@@ -55,6 +55,31 @@ impl Parser<char> for Char {
     }
 }
 
+pub struct Str {
+    pub str : String,
+}
+impl Str {
+    pub fn new(str : &str) -> Box<Parser<String>> {
+        Box::new(Str{str: str.to_string()})
+    }
+}
+impl Parser<String> for Str {
+    fn parse(&self, input : &mut String) -> Result<String, ParseError> {
+        if input.starts_with(&self.str) {
+            input.drain(..self.str.len());
+            Ok(self.str.clone())
+        }
+        else {
+            Err(ParseError {
+                filename: "stdin".to_string(),
+                line: 0,
+                char: 0,
+                explanation: format!("expected '{}'", self.str),
+            })
+        }
+    }
+}
+
 pub struct Many<T> {
     pub p : ParserB<T>,
 }
