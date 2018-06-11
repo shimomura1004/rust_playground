@@ -61,6 +61,7 @@ pub enum ExpAst {
     If(Box<ExpAst>, Box<ExpAst>, Box<ExpAst>),
 }
 
+#[derive(Debug, Clone)]
 pub enum StatementAst {
     Exp(Box<ExpAst>),
     Assign(String, Box<ExpAst>),

@@ -109,3 +109,29 @@ pub fn process(program : &Vec<Operator>) {
         pc += 1;
     }
 }
+
+
+#[test]
+fn vm_test() {
+    // calculate sum of 1..10
+    let program = vec![
+        Operator::PushInt32(10),  // max
+        Operator::PushInt32(0),   // counter
+        Operator::PushInt32(0),   // sum
+        Operator::Load(1),
+        Operator::PushInt32(1),
+        Operator::Add,
+        Operator::Store(2),       // increment 'counter'
+        Operator::Pop,
+        Operator::Load(1),
+        Operator::Add,            // update 'sum'
+        Operator::Load(1),
+        Operator::Load(3),
+        Operator::Equal,          // compare 'max' and 'sum'
+        Operator::Not,
+        Operator::Dump,
+        Operator::JumpIf(-12),
+        Operator::Print,
+    ];
+    process(&program);
+}

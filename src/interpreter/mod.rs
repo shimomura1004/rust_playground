@@ -99,3 +99,31 @@ impl Interpreter {
         }
     }
 }
+
+use parser;
+#[test]
+fn test_function_definition() {
+    let mut interpreter = Interpreter::new();
+    let mut input = "sum = |n| if n then sum (n - 1) + n else 0 end".to_string();
+
+    let statement = parser::Statement::new().parse(&mut input);
+    assert!(statement.is_ok());
+    let ast =  parser::syntax::statement_to_ast(statement.unwrap());
+    let v = interpreter.eval(ast.clone());
+    assert!(v.is_some());
+    match v.unwrap() {
+        Data::Fun(_, _) => assert!(true),
+        _ => assert!(false),
+    }
+
+    let mut input = "sum(10)".to_string();
+    let statement = parser::Statement::new().parse(&mut input);
+    assert!(statement.is_ok());
+    let ast =  parser::syntax::statement_to_ast(statement.unwrap());
+    let v = interpreter.eval(ast.clone());
+    assert!(v.is_some());
+    match v.unwrap() {
+        Data::Num(num) => assert_eq!(num, 55),
+        _ => assert!(false),
+    }
+}

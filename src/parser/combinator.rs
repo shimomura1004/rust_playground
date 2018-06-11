@@ -344,3 +344,85 @@ impl<T1, T2> Parser<Vec<T1>> for SepBy<T1, T2> {
         Ok(results)
     }
 }
+
+
+
+#[test]
+fn char_parser() {
+    let mut code = "123".to_string();
+    let p_one = Char::new('1');
+    let result = p_one.parse(&mut code);
+    assert!(result.is_ok(), "parse error");
+    assert_eq!(result.unwrap(), '1');
+}
+
+#[test]
+fn many1_parser() {
+    let mut code = "11123".to_string();
+    let p_one = Char::new('1');
+    let p_ones = Many1::new(p_one);
+    let ones = p_ones.parse(&mut code);
+    assert!(ones.is_ok(), "parse error");
+    assert_eq!(ones.unwrap(), vec!['1','1','1']);
+}
+
+#[test]
+fn try_parser() {
+    let mut code = "23".to_string();
+    let p_try = Try::new(vec![Char::new('1'), Char::new('2')]);
+    let one_or_two = p_try.parse(&mut code);
+    assert!(one_or_two.is_ok(), "parse error");
+    assert_eq!(one_or_two.unwrap(), '2');
+}
+
+#[test]
+fn oneof_parser() {
+    let mut code = "23".to_string();
+    let p_one_or_two = OneOf::new("12");
+    let one_or_two = p_one_or_two.parse(&mut code);
+    assert!(one_or_two.is_ok(), "parse error");
+    assert_eq!(one_or_two.unwrap(), '2');
+}
+
+#[test]
+fn digit_parser() {
+    let mut code = "456a12".to_string();
+    let i = Digit::new().parse(&mut code);
+    assert!(i.is_ok(), "parse error");
+    assert_eq!(i.unwrap(), 456);
+}
+
+#[test]
+fn combination_parser() {
+    let whitespaces = SkipMany::new(Char::new(' '));
+    let many_a = Many::new(Char::new('a'));
+    let many_b = Many1::new(Char::new('b'));
+    let many_c = Many1::new(Char::new('c'));
+    let b_or_c = Try::new(vec![many_b, many_c]);
+    
+    let mut input = "aaabd".to_string();
+    whitespaces.parse(&mut input);
+    let parse_result = many_a.parse(&mut input);
+    assert!(parse_result.is_ok(), "parse error");
+    let parse_result = b_or_c.parse(&mut input);
+    assert!(parse_result.is_ok(), "parse error");
+
+    let mut input = "cd".to_string();
+    whitespaces.parse(&mut input);
+    let parse_result = many_a.parse(&mut input);
+    assert!(parse_result.is_ok(), "parse error");
+    let parse_result = b_or_c.parse(&mut input);
+    assert!(parse_result.is_ok(), "parse error");
+}
+
+#[test]
+fn str_parser() {
+    let mut code = "helloworld".to_string();
+    let hello_p = Str::new("hello");
+    let world_p = Str::new("world");
+
+    let parse_result = hello_p.parse(&mut code);
+    assert!(parse_result.is_ok(), "parse error");
+    let parse_result = world_p.parse(&mut code);
+    assert!(parse_result.is_ok(), "parse error");
+}

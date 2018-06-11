@@ -1,4 +1,5 @@
 use parser::syntax::ExpAst;
+use parser::syntax::StatementAst;
 use vm;
 
 pub fn compile(ast : &ExpAst, code : &mut Vec<vm::Operator>) {
@@ -28,5 +29,10 @@ pub fn compile(ast : &ExpAst, code : &mut Vec<vm::Operator>) {
         },
         ExpAst::Var(name) => (),
         ExpAst::Num(num) => code.push(vm::Operator::PushInt32(*num)),
+        _ => (),
     };
+}
+
+pub fn compile_statement(ast : &StatementAst, code : &mut Vec<vm::Operator>) {
+    
 }
