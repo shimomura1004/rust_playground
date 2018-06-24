@@ -27,9 +27,13 @@ pub fn compile(ast : &ExpAst, code : &mut Vec<vm::Operator>) {
         ExpAst::App(t1, t2) => {
             // todo
         },
-        ExpAst::Var(name) => (),
+        ExpAst::Var(name) => {
+            // todo
+        },
         ExpAst::Num(num) => code.push(vm::Operator::PushInt32(*num)),
-        ExpAst::Fun(_,_) => (),
+        ExpAst::Fun(_,_) => {
+            // todo
+        },
         ExpAst::If(cond_exp, then_exp, else_exp) => {
             compile(cond_exp, code);
             code.push(vm::Operator::PushInt32(0));

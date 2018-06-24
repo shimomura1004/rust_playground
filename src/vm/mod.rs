@@ -116,6 +116,8 @@ pub fn process(program : &Vec<Operator>) {
         
         pc += 1;
     }
+
+    println!("STACK: {:?}", stack);
 }
 
 

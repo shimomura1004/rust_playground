@@ -41,9 +41,10 @@ fn main() {
                 // compile
                 let mut code = vec![];
                 compiler::compile_statement(&ast, &mut code);
-                println!("{:?}", code);
+                println!("ASSEMBLED: {:?}", code);
 
                 code.push(vm::Operator::Print);
+                code.push(vm::Operator::Pop);
                 vm::process(&code);
             },
             Err(e) => println!("AST: {:?}", e),
