@@ -41,10 +41,10 @@ fn main() {
                 // compile
                 let mut code = vec![];
                 compiler::compile_statement(&ast, &mut code);
-                // code.push(vm::Operator::Print);
-                // println!("{:?}", code);
+                println!("{:?}", code);
 
-                // vm::process(&code);
+                code.push(vm::Operator::Print);
+                vm::process(&code);
             },
             Err(e) => println!("AST: {:?}", e),
         }

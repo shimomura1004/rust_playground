@@ -10,15 +10,16 @@ pub enum Operator {
 
     Not,
 
-    Equal,           // read 2 value from stack, compare them  and push 1/0 if values are the same/different
+    Equal,             // read 2 value from stack, compare them  and push 1/0 if values are the same/different
 
-    Load(usize),     // read the n-th item in the stack and push it on top
-    Store(usize),    // write value on top of the stack to the n-th item in the stack
+    Load(usize),       // read the n-th item in the stack and push it on top
+    Store(usize),      // write value on top of the stack to the n-th item in the stack
 
-    Print,           // print the value on top of the stack
+    Print,             // print the value on top of the stack
 
-    JumpIf(isize),   // proceed the PC if top of the stack is 1
-    Jump(isize),     // proceed the PC for the size
+    JumpIf(isize),     // proceed the PC if top of the stack is not 0
+    JumpUnless(isize), // proced the PC if top of the stack is 0
+    Jump(isize),       // proceed the PC for the size
 
     Dump,
 }
@@ -35,6 +36,7 @@ pub fn process(program : &Vec<Operator>) {
     let mut stack : Vec<Data> = Vec::new();
 
     while pc < program.len() {
+        println!("{:?}", stack);
         match program[pc] {
             Operator::PushInt32(i) => stack.push(Data::Num(i)),
             Operator::Pop => {stack.pop();},
@@ -91,7 +93,13 @@ pub fn process(program : &Vec<Operator>) {
 
             Operator::JumpIf(i) => {
                 let Data::Num(v) = stack.pop().unwrap();
-                if v == 1 {
+                if v != 0 {
+                    pc = ((pc as isize) + i - 1) as usize;
+                }
+            },
+            Operator::JumpUnless(i) => {
+                let Data::Num(v) = stack.pop().unwrap();
+                if v == 0 {
                     pc = ((pc as isize) + i - 1) as usize;
                 }
             },
