@@ -84,7 +84,7 @@ impl Interpreter {
         }
     }
 
-    pub fn eval(&mut self, ast : StatementAst) -> Option<Data> {
+    pub fn eval_statement_ast(&mut self, ast : StatementAst) -> Option<Data> {
         match ast {
             StatementAst::Exp(exp_ast) => self.eval_exp_ast(*exp_ast, &HashMap::new()),
             StatementAst::Assign(name, exp_ast) => {
@@ -95,6 +95,18 @@ impl Interpreter {
                     },
                     None => None,
                 }
+            },
+        }
+    }
+
+    pub fn eval(&mut self, ast : BlockAst) -> Option<Data> {
+        match ast {
+            BlockAst::Block(statement_asts) => {
+                let mut val = None;
+                for statement_ast in statement_asts {
+                    val = self.eval_statement_ast(statement_ast);
+                }
+                val
             },
         }
     }

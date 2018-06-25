@@ -48,6 +48,11 @@ pub enum Statement {
     AssignmentStatement(String, Box<Exp>),
 }
 
+#[derive(Debug)]
+pub enum Block {
+    Block(Vec<Statement>),
+}
+
 #[derive(Debug, Clone)]
 pub enum ExpAst {
     Add(Box<ExpAst>, Box<ExpAst>),
@@ -65,6 +70,11 @@ pub enum ExpAst {
 pub enum StatementAst {
     Exp(Box<ExpAst>),
     Assign(String, Box<ExpAst>),
+}
+
+#[derive(Debug, Clone)]
+pub enum BlockAst {
+    Block(Vec<StatementAst>),
 }
 
 fn term_to_ast(term : Term) -> ExpAst {
@@ -147,5 +157,17 @@ pub fn statement_to_ast(statement : Statement) -> StatementAst {
     match statement {
         Statement::ExpressionStatement(exp) => StatementAst::Exp(Box::new(exp_to_ast(*exp))),
         Statement::AssignmentStatement(name, exp) => StatementAst::Assign(name, Box::new(exp_to_ast(*exp))),
+    }
+}
+
+pub fn block_to_ast(block : Block) -> BlockAst {
+    match block {
+        Block::Block(statements) => {
+            let mut block_ast = vec![];
+            for statement in statements {
+                block_ast.push(statement_to_ast(statement));
+            }
+            BlockAst::Block(block_ast)
+        },
     }
 }

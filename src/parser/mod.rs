@@ -399,7 +399,52 @@ impl Parser<syntax::Statement> for Statement {
             ExpressionStatement::new(),
         ]).parse(input)?;
         Spaces::new().parse(input)?;
-        Eof::new().parse(input)?;
         Ok(statement)
     }
+}
+
+//---- Block --------------------------------------------------------------------
+pub struct SingleExpressionBlock {}
+impl SingleExpressionBlock {
+    pub fn new() -> Box<Parser<syntax::Block>> {
+        Box::new(SingleExpressionBlock{})
+    }
+}
+impl Parser<syntax::Block> for SingleExpressionBlock {
+    fn parse(&self, input : &mut String) -> Result<syntax::Block, ParseError> {
+        Spaces::new().parse(input)?;
+        let statement = Statement::new().parse(input)?;
+        Ok(syntax::Block::Block(vec![statement]))
+    }
+}
+
+pub struct MultiExpressionBlock {}
+impl MultiExpressionBlock {
+    pub fn new() -> Box<Parser<syntax::Block>> {
+        Box::new(MultiExpressionBlock{})
+    }
+}
+impl Parser<syntax::Block> for MultiExpressionBlock {
+    fn parse(&self, input : &mut String) -> Result<syntax::Block, ParseError> {
+        Spaces::new().parse(input)?;
+        Char::new('{').parse(input)?;
+        Spaces::new().parse(input)?;
+        let statements = SepBy::new(Then::new(Spaces::new(), Statement::new()), Then::new(Spaces::new(), Char::new(';'))).parse(input)?;
+         Spaces::new().parse(input)?;
+        Char::new('}').parse(input)?;
+        Eof::new().parse(input)?;
+        Ok(syntax::Block::Block(statements))
+     }
+}
+
+pub struct Block {}
+impl Block {
+    pub fn new() -> Box<Parser<syntax::Block>> {
+        Box::new(Block{})
+    }
+}
+impl Parser<syntax::Block> for Block {
+    fn parse(&self, input : &mut String) -> Result<syntax::Block, ParseError> {
+        Try::new(vec![MultiExpressionBlock::new(), SingleExpressionBlock::new()]).parse(input)
+   }
 }

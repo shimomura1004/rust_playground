@@ -16,11 +16,13 @@ fn main() {
         io::stdin().read_line(&mut expression)
             .expect("Failed to read line");
 
-        let parse_result = parser::Statement::new().parse(&mut expression.trim().to_string());
+        let parse_result = parser::Block::new().parse(&mut expression.trim().to_string());
 
         match parse_result {
-            Ok(statement) => {
-                let ast = parser::syntax::statement_to_ast(statement);
+            // Ok(statement) => {
+            Ok(block) => {
+                let ast = parser::syntax::block_to_ast(block);
+                println!("AST: {:?}", ast);
                 
                 // evaluate
                 let v = interpreter.eval(ast.clone());
@@ -28,24 +30,24 @@ fn main() {
                     Some(v) => {
                         match v {
                             interpreter::Data::Num(num) => {
-                                println!("{}", num);
+                                println!("EVALUATED: {}", num);
                             },
                             interpreter::Data::Fun(_, _) => {
-                                println!("<fun>");
+                                println!("EVALUATED: <fun>");
                             },
                         }
                     },
                     None => println!("error"),
                 };
 
-                // compile
-                let mut code = vec![];
-                compiler::compile_statement(&ast, &mut code);
-                println!("ASSEMBLED: {:?}", code);
+                // // compile
+                // let mut code = vec![];
+                // compiler::compile_statement(&ast, &mut code);
+                // println!("ASSEMBLED: {:?}", code);
 
-                code.push(vm::Operator::Print);
-                code.push(vm::Operator::Pop);
-                vm::process(&code);
+                // code.push(vm::Operator::Print);
+                // code.push(vm::Operator::Pop);
+                // vm::process(&code);
             },
             Err(e) => println!("AST: {:?}", e),
         }
