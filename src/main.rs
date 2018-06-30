@@ -19,7 +19,6 @@ fn main() {
         let parse_result = parser::Block::new().parse(&mut expression.trim().to_string());
 
         match parse_result {
-            // Ok(statement) => {
             Ok(block) => {
                 let ast = parser::syntax::block_to_ast(block);
                 println!("AST: {:?}", ast);
@@ -32,7 +31,7 @@ fn main() {
                             interpreter::Data::Num(num) => {
                                 println!("EVALUATED: {}", num);
                             },
-                            interpreter::Data::Fun(_, _) => {
+                            interpreter::Data::Fun(_, _, _) => {
                                 println!("EVALUATED: <fun>");
                             },
                         }
@@ -40,10 +39,11 @@ fn main() {
                     None => println!("error"),
                 };
 
-                // // compile
-                // let mut code = vec![];
-                // compiler::compile_statement(&ast, &mut code);
-                // println!("ASSEMBLED: {:?}", code);
+                // compile
+                let mut code = vec![];
+                compiler::compile_block(&ast, &mut code);
+                //compiler::compile_statement(&ast, &mut code);
+                println!("ASSEMBLED: {:?}", code);
 
                 // code.push(vm::Operator::Print);
                 // code.push(vm::Operator::Pop);

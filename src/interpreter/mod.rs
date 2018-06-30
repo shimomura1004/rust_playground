@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use parser::syntax::*;
 
+// todo: have to have a reference to the parent environment
 type Environment = HashMap<String, Data>;
 
 #[derive(Debug, Clone)]
 pub enum Data {
     Num(i32),
-    Fun(String, ExpAst),
+    Fun(String, Environment, ExpAst),
 }
 
 pub struct Interpreter {
@@ -45,8 +46,9 @@ impl Interpreter {
             },
             ExpAst::App(t1, t2) => {
                 match (self.eval_exp_ast(*t1, bind)?, self.eval_exp_ast(*t2, bind)?) {
-                    (Data::Fun(var, body), v2) => {
+                    (Data::Fun(var, env, body), v2) => {
                         let mut new_bind = bind.clone();
+                        new_bind.extend(env);
                         new_bind.insert(var, v2);
                         self.eval_exp_ast(body, &new_bind)
                     }
@@ -62,7 +64,11 @@ impl Interpreter {
                     }
                 }
             },
-            ExpAst::Fun(vars, exp) => Some(Data::Fun(vars, *exp)),
+            ExpAst::Fun(vars, exp) => {
+                let local = bind.clone();
+                // todo: get &mut instead of cloning the current environment
+                Some(Data::Fun(vars, local, *exp))
+            },
             ExpAst::Num(num) => Some(Data::Num(num)),
             ExpAst::If(cond_ast, then_ast, else_ast) => {
                 match self.eval_exp_ast(*cond_ast, bind)? {

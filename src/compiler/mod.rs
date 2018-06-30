@@ -1,5 +1,6 @@
 use parser::syntax::ExpAst;
 use parser::syntax::StatementAst;
+use parser::syntax::BlockAst;
 use vm;
 
 pub fn compile(ast : &ExpAst, code : &mut Vec<vm::Operator>) {
@@ -61,4 +62,8 @@ pub fn compile_statement(ast : &StatementAst, code : &mut Vec<vm::Operator>) {
         StatementAst::Exp(exp_ast) => compile(exp_ast, code),
         StatementAst::Assign(name, exp_ast) => (),
     }
+}
+
+pub fn compile_block(ast : &BlockAst, code : &mut Vec<vm::Operator>) {
+
 }
