@@ -11,7 +11,7 @@ fn main() {
 
     loop {
         print!("> ");
-        io::stdout().flush();
+        io::stdout().flush().unwrap();
         expression.clear();
         io::stdin().read_line(&mut expression)
             .expect("Failed to read line");
@@ -31,8 +31,9 @@ fn main() {
                             interpreter::Data::Num(num) => {
                                 println!("EVALUATED: {}", num);
                             },
-                            interpreter::Data::Fun(_, _, _) => {
+                            interpreter::Data::Fun(_, env, _) => {
                                 println!("EVALUATED: <fun>");
+                                println!("{:?}", env);
                             },
                         }
                     },

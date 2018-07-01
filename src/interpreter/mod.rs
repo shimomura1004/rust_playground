@@ -124,20 +124,20 @@ fn test_function_definition_sum() {
     let mut interpreter = Interpreter::new();
     let mut input = "sum = |n| if n then sum (n - 1) + n else 0 end".to_string();
 
-    let statement = parser::Statement::new().parse(&mut input);
-    assert!(statement.is_ok());
-    let ast =  parser::syntax::statement_to_ast(statement.unwrap());
+    let block = parser::Block::new().parse(&mut input);
+    assert!(block.is_ok());
+    let ast =  parser::syntax::block_to_ast(block.unwrap());
     let v = interpreter.eval(ast.clone());
     assert!(v.is_some());
     match v.unwrap() {
-        Data::Fun(_, _) => assert!(true),
+        Data::Fun(_, _, _) => assert!(true),
         _ => assert!(false),
     }
 
     let mut input = "sum(10)".to_string();
-    let statement = parser::Statement::new().parse(&mut input);
-    assert!(statement.is_ok());
-    let ast =  parser::syntax::statement_to_ast(statement.unwrap());
+    let block = parser::Block::new().parse(&mut input);
+    assert!(block.is_ok());
+    let ast =  parser::syntax::block_to_ast(block.unwrap());
     let v = interpreter.eval(ast.clone());
     assert!(v.is_some());
     match v.unwrap() {
@@ -151,24 +151,51 @@ fn test_function_definition_fib() {
     let mut interpreter = Interpreter::new();
     let mut input = "fib = |n| if n then if n-1 then fib(n-1) + fib(n-2) else 1 end else 1 end".to_string();
 
-    let statement = parser::Statement::new().parse(&mut input);
-    assert!(statement.is_ok());
-    let ast =  parser::syntax::statement_to_ast(statement.unwrap());
+    let block = parser::Block::new().parse(&mut input);
+    assert!(block.is_ok());
+    let ast =  parser::syntax::block_to_ast(block.unwrap());
     let v = interpreter.eval(ast.clone());
     assert!(v.is_some());
     match v.unwrap() {
-        Data::Fun(_, _) => assert!(true),
+        Data::Fun(_, _, _) => assert!(true),
         _ => assert!(false),
     }
 
     let mut input = "fib(6)".to_string();
-    let statement = parser::Statement::new().parse(&mut input);
-    assert!(statement.is_ok());
-    let ast =  parser::syntax::statement_to_ast(statement.unwrap());
+    let block = parser::Block::new().parse(&mut input);
+    assert!(block.is_ok());
+    let ast =  parser::syntax::block_to_ast(block.unwrap());
     let v = interpreter.eval(ast.clone());
     assert!(v.is_some());
     match v.unwrap() {
         Data::Num(num) => assert_eq!(num, 13),
+        _ => assert!(false),
+    }
+}
+
+#[test]
+fn test_closure() {
+    let mut interpreter = Interpreter::new();
+    let mut input = "plus = |x| |y| x + y".to_string();
+
+    let block = parser::Block::new().parse(&mut input);
+    assert!(block.is_ok());
+    let ast =  parser::syntax::block_to_ast(block.unwrap());
+    let v = interpreter.eval(ast.clone());
+    assert!(v.is_some());
+    match v.unwrap() {
+        Data::Fun(_, _, _) => assert!(true),
+        _ => assert!(false),
+    }
+
+    let mut input = "plus 1 2".to_string();
+    let block = parser::Block::new().parse(&mut input);
+    assert!(block.is_ok());
+    let ast =  parser::syntax::block_to_ast(block.unwrap());
+    let v = interpreter.eval(ast.clone());
+    assert!(v.is_some());
+    match v.unwrap() {
+        Data::Num(num) => assert_eq!(num, 3),
         _ => assert!(false),
     }
 }
